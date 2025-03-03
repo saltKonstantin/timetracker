@@ -1,0 +1,63 @@
+/* Custom Styles for TimeTracker */
+
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+    border: none;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    padding: 1rem;
+}
+
+/* Time Entry Table Styles */
+.table th {
+    font-weight: 600;
+    border-top: none;
+}
+
+/* Form Styles */
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Button Styles */
+.btn {
+    border-radius: 0.25rem;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+/* Navbar Styles */
+.navbar {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Modal Styles */
+.modal-content {
+    border-radius: 0.5rem;
+    border: none;
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.125);
+}

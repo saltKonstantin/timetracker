@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - TimeTracker{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1>Time Tracker</h1>
+        <p class="lead">Welcome, {{ current_user.username }}!</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <div class="btn-group">
+            <a href="{{ url_for('entries.dashboard', date=(selected_date - timedelta(days=1)).strftime('%Y-%m-%d')) }}" class="btn btn-outline-primary">
+                <span>&laquo; Previous Day</span>
+            </a>
+            <a href="{{ url_for('entries.dashboard') }}" class="btn btn-outline-primary">Today</a>
+            <a href="{{ url_for('entries.dashboard', date=(selected_date + timedelta(days=1)).strftime('%Y-%m-%d')) }}" class="btn btn-outline-primary">
+                <span>Next Day &raquo;</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">{{ selected_date.strftime('%A, %B %d, %Y') }}</h2>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newEntryModal">
+                    Add Time Entry
+                </button>
+            </div>
+            <div class="card-body">
+                {% if entries %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Duration</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in entries %}
+                                <tr>
+                                    <td>{{ entry.description }}</td>
+                                    <td>{{ entry.start_time.strftime('%H:%M') }}</td>
+                                    <td>{{ entry.end_time.strftime('%H:%M') }}</td>
+                                    <td>{{ "%.2f"|format(entry.duration/60) }} hr</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('entries.edit_entry', entry_id=entry.id) }}" class="btn btn-outline-primary">Edit</a>
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    onclick="confirmDelete({{ entry.id }}, '{{ entry.description }}')">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-center py-4">No time entries for this day. Click "Add Time Entry" to get started.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Entry Modal -->
+<div class="modal fade" id="newEntryModal" tabindex="-1" aria-labelledby="newEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newEntryModalLabel">Add New Time Entry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" id="entryTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="standard-tab" data-bs-toggle="tab" 
+                                data-bs-target="#standard" type="button" role="tab" 
+                                aria-controls="standard" aria-selected="true">Standard Entry</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="quick-tab" data-bs-toggle="tab" 
+                                data-bs-target="#quick" type="button" role="tab" 
+                                aria-controls="quick" aria-selected="false">Quick Entry</button>
+                    </li>
+                </ul>
+                <div class="tab-content pt-3" id="entryTabsContent">
+                    <div class="tab-pane fade show active" id="standard" role="tabpanel" aria-labelledby="standard-tab">
+                        <form method="post" action="{{ url_for('entries.create_entry') }}">
+                            {{ entry_form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ entry_form.description.label(class="form-label") }}
+                                {{ entry_form.description(class="form-control") }}
+                                {% for error in entry_form.description.errors %}
+                                    <span class="text-danger">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ entry_form.start_time.label(class="form-label") }}
+                                    {{ entry_form.start_time(class="form-control") }}
+                                    {% for error in entry_form.start_time.errors %}
+                                        <span class="text-danger">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ entry_form.end_time.label(class="form-label") }}
+                                    {{ entry_form.end_time(class="form-control") }}
+                                    {% for error in entry_form.end_time.errors %}
+                                        <span class="text-danger">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2">
+                                {{ entry_form.submit(class="btn btn-primary") }}
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="quick" role="tabpanel" aria-labelledby="quick-tab">
+                        <form method="post" action="{{ url_for('entries.quick_entry') }}">
+                            {{ quick_form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ quick_form.description.label(class="form-label") }}
+                                {{ quick_form.description(class="form-control") }}
+                                {% for error in quick_form.description.errors %}
+                                    <span class="text-danger">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="mb-3">
+                                {{ quick_form.duration.label(class="form-label") }}
+                                {{ quick_form.duration(class="form-control", placeholder="e.g. 0.25 for 15 minutes, 1.5 for 1.5 hours") }}
+                                <div class="form-text">Enter hours, e.g. 0.25 for 15 minutes, 1.5 for 1.5 hours</div>
+                                {% for error in quick_form.duration.errors %}
+                                    <span class="text-danger">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="d-grid gap-2">
+                                {{ quick_form.submit(class="btn btn-primary") }}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the entry "<span id="deleteEntryName"></span>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" action="">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function confirmDelete(entryId, entryDescription) {
+        document.getElementById('deleteEntryName').textContent = entryDescription;
+        document.getElementById('deleteForm').action = "{{ url_for('entries.delete_entry', entry_id=0) }}".replace('/0', '/' + entryId);
+        
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+</script>
+{% endblock %}
