@@ -42,7 +42,8 @@ def dashboard():
         entries=entries,
         selected_date=selected_date,
         entry_form=entry_form,
-        quick_form=quick_form
+        quick_form=quick_form,
+        timedelta=timedelta
     )
 
 @entries_bp.route('/entry/new', methods=['POST'])
