@@ -62,14 +62,15 @@ def timeline():
     except ValueError:
         selected_date = datetime.now()
     
-    # Calculate the start of the week (Monday)
-    weekday = selected_date.weekday()
+    # Calculate the Monday of the current week (regardless of the current day)
+    weekday = selected_date.weekday()  # Monday is 0, Sunday is 6
+    # Subtract the current weekday to get to Monday
     week_start = selected_date - timedelta(days=weekday)
     
-    # Calculate the end of the week (Sunday)
+    # Calculate the Sunday of the current week
     week_end = week_start + timedelta(days=6)
     
-    # Generate list of weekdays
+    # Generate list of weekdays (always Monday through Sunday)
     weekdays = [week_start + timedelta(days=i) for i in range(7)]
     
     # Get entries for the entire week
@@ -132,6 +133,29 @@ def create_entry():
             flash(f"{getattr(form, field).label.text}: {error}", "error")
     
     return redirect(url_for('entries.timeline'))
+
+@entries_bp.route('/entry/update', methods=['POST'])
+@login_required
+def update_entry_ajax():
+    data = request.json
+    entry_id = data.get('id')
+    new_start = data.get('start_time')
+    new_end = data.get('end_time')
+    
+    entry = TimeEntry.query.get_or_404(entry_id)
+    
+    # Security check - only owner can update
+    if entry.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'You cannot edit this entry.'}), 403
+    
+    try:
+        entry.start_time = datetime.fromisoformat(new_start)
+        entry.end_time = datetime.fromisoformat(new_end)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 400
 
 @entries_bp.route('/entry/quick', methods=['POST'])
 @login_required

@@ -36,6 +36,7 @@
     <div class="card-body">
         <div class="week-view-container">
             <div class="weekday-headers">
+                <div class="time-header-spacer"></div>
                 {% for day in weekdays %}
                 <div class="weekday-header {% if day.date == today.date() %}today{% endif %}">
                     <div class="weekday-name">{{ day.strftime('%a') }}</div>
@@ -279,17 +280,33 @@
         let selectionCurrentDay = null;
         let selectedSlots = [];
         
+        // Drag state
+        let isDragging = false;
+        let isResizing = false;
+        let draggedEntry = null;
+        let dragStartY = 0;
+        let originalEntryTop = 0;
+        let resizeStartY = 0;
+        let originalEntryHeight = 0;
+        let entryStartTime = null;
+        let entryEndTime = null;
+        let entryDate = null;
+        
         // Time slot selection
         const timeSlots = document.querySelectorAll('.time-slot');
         timeSlots.forEach(slot => {
             slot.addEventListener('mousedown', (e) => {
-                if (e.button === 0) { // Left mouse button
+                // Make sure we're not clicking on an entry or already dragging/resizing
+                if (e.button === 0 && !isDragging && !isResizing && !e.target.closest('.time-entry')) {
                     isSelecting = true;
                     selectionStart = slot;
                     selectionCurrentDay = slot.dataset.date;
                     clearSelection();
                     slot.classList.add('selected');
                     selectedSlots.push(slot);
+                    
+                    // Prevent event from bubbling to parent elements
+                    e.stopPropagation();
                 }
             });
             
@@ -300,11 +317,22 @@
             });
         });
         
-        document.addEventListener('mouseup', () => {
+        document.addEventListener('mouseup', (e) => {
             if (isSelecting) {
                 isSelecting = false;
                 if (selectedSlots.length > 0) {
                     showNewEntryFromSelection();
+                }
+            }
+            
+            if (isDragging || isResizing) {
+                isDragging = false;
+                isResizing = false;
+                
+                if (draggedEntry) {
+                    // Save the changes to the server
+                    saveEntryChanges(draggedEntry);
+                    draggedEntry = null;
                 }
             }
         });
@@ -332,17 +360,170 @@
                 entryEl.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
                 entryEl.style.backgroundColor = getRandomColor(entry.description);
                 entryEl.dataset.entryId = entry.id;
+                entryEl.dataset.startTime = entry.start_time.toISOString();
+                entryEl.dataset.endTime = entry.end_time.toISOString();
+                entryEl.dataset.date = entry.date;
                 entryEl.innerHTML = `
                     <div class="entry-title">${entry.description}</div>
                     <div class="entry-time">${formatTime(entry.start_time)} - ${formatTime(entry.end_time)}</div>
+                    <div class="entry-resize-handle"></div>
                 `;
                 
+                // Add event listeners for dragging the entry
+                entryEl.addEventListener('mousedown', (e) => {
+                    if (e.target.classList.contains('entry-resize-handle')) {
+                        // Resize handling
+                        e.stopPropagation();
+                        isResizing = true;
+                        draggedEntry = entryEl;
+                        resizeStartY = e.clientY;
+                        originalEntryHeight = entryEl.offsetHeight;
+                        entryStartTime = new Date(entryEl.dataset.startTime);
+                        entryEndTime = new Date(entryEl.dataset.endTime);
+                        entryDate = entryEl.dataset.date;
+                    } else if (!e.target.closest('a') && !e.target.closest('button')) {
+                        // Drag handling (avoid when clicking links or buttons inside the entry)
+                        e.stopPropagation();
+                        isDragging = true;
+                        draggedEntry = entryEl;
+                        dragStartY = e.clientY;
+                        originalEntryTop = entryEl.offsetTop;
+                        entryStartTime = new Date(entryEl.dataset.startTime);
+                        entryEndTime = new Date(entryEl.dataset.endTime);
+                        entryDate = entryEl.dataset.date;
+                        
+                        // Highlight the entry being dragged
+                        entryEl.classList.add('dragging');
+                    }
+                });
+                
                 // Add click handler to show entry details
-                entryEl.addEventListener('click', () => {
-                    showEntryDetails(entry);
+                entryEl.addEventListener('click', (e) => {
+                    if (!isDragging && !isResizing) {
+                        showEntryDetails(entry);
+                    }
                 });
                 
                 container.appendChild(entryEl);
+            });
+        }
+        
+        // Handle mouse move for dragging and resizing
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && draggedEntry) {
+                const deltaY = e.clientY - dragStartY;
+                const slotHeight = 8; // Height of one 15-minute slot in pixels
+                const slotsToMove = Math.round(deltaY / slotHeight);
+                
+                if (slotsToMove !== 0) {
+                    // Calculate new times
+                    const durationMs = entryEndTime.getTime() - entryStartTime.getTime();
+                    const newStartTime = new Date(entryStartTime.getTime() + (slotsToMove * 15 * 60 * 1000));
+                    const newEndTime = new Date(newStartTime.getTime() + durationMs);
+                    
+                    // Update the element's position
+                    const startHour = newStartTime.getHours();
+                    const startMinute = newStartTime.getMinutes();
+                    const endHour = newEndTime.getHours();
+                    const endMinute = newEndTime.getMinutes();
+                    
+                    const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
+                    const endPosition = (endHour * 4) + Math.ceil(endMinute / 15);
+                    const entryLength = endPosition - startPosition;
+                    
+                    draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
+                    
+                    // Update the data attributes
+                    draggedEntry.dataset.startTime = newStartTime.toISOString();
+                    draggedEntry.dataset.endTime = newEndTime.toISOString();
+                    
+                    // Update displayed time
+                    const timeDisplay = draggedEntry.querySelector('.entry-time');
+                    if (timeDisplay) {
+                        timeDisplay.textContent = `${formatTime(newStartTime)} - ${formatTime(newEndTime)}`;
+                    }
+                    
+                    // Reset drag start position
+                    dragStartY = e.clientY;
+                    entryStartTime = newStartTime;
+                    entryEndTime = newEndTime;
+                }
+            } else if (isResizing && draggedEntry) {
+                const deltaY = e.clientY - resizeStartY;
+                const slotHeight = 8; // Height of one 15-minute slot in pixels
+                const slotsToResize = Math.round(deltaY / slotHeight);
+                
+                if (slotsToResize !== 0) {
+                    // Only allow resizing the end time
+                    const newEndTime = new Date(entryEndTime.getTime() + (slotsToResize * 15 * 60 * 1000));
+                    
+                    // Make sure end time is not before start time
+                    if (newEndTime > entryStartTime) {
+                        // Update the element's size
+                        const startHour = entryStartTime.getHours();
+                        const startMinute = entryStartTime.getMinutes();
+                        const endHour = newEndTime.getHours();
+                        const endMinute = newEndTime.getMinutes();
+                        
+                        const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
+                        const endPosition = (endHour * 4) + Math.ceil(endMinute / 15);
+                        const entryLength = endPosition - startPosition;
+                        
+                        draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
+                        
+                        // Update the data attributes
+                        draggedEntry.dataset.endTime = newEndTime.toISOString();
+                        
+                        // Update displayed time
+                        const timeDisplay = draggedEntry.querySelector('.entry-time');
+                        if (timeDisplay) {
+                            timeDisplay.textContent = `${formatTime(entryStartTime)} - ${formatTime(newEndTime)}`;
+                        }
+                        
+                        // Reset resize start position
+                        resizeStartY = e.clientY;
+                        entryEndTime = newEndTime;
+                    }
+                }
+            }
+        });
+        
+        // Save entry changes to the server
+        function saveEntryChanges(entryEl) {
+            const entryId = entryEl.dataset.entryId;
+            const startTime = entryEl.dataset.startTime;
+            const endTime = entryEl.dataset.endTime;
+            
+            // Remove the dragging class
+            entryEl.classList.remove('dragging');
+            
+            // Send the update to the server
+            fetch('/entry/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() if csrf_token else "" }}'
+                },
+                body: JSON.stringify({
+                    id: entryId,
+                    start_time: startTime,
+                    end_time: endTime
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    console.error('Failed to update entry:', data.message);
+                    alert('Failed to update entry: ' + data.message);
+                    // Reload the page to refresh the entries
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error updating entry:', error);
+                alert('An error occurred while updating the entry. Please try again.');
+                // Reload the page to refresh the entries
+                window.location.reload();
             });
         }
         
@@ -473,16 +654,49 @@
             
             // Format for datetime-local input
             const formatForInput = (date) => {
-                return date.toISOString().substring(0, 16);
+                const localISOString = new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+                    .toISOString()
+                    .substring(0, 16);
+                return localISOString;
             };
             
             document.getElementById('selectionStartTime').value = formatForInput(startDateTime);
             document.getElementById('selectionEndTime').value = formatForInput(endDateTime);
             
+            // Clear the description field
+            const descriptionField = document.querySelector('#newEntryFromSelectionForm input[name="description"]');
+            if (descriptionField) {
+                descriptionField.value = '';
+                descriptionField.focus();
+            }
+            
             // Show the modal
             const modal = new bootstrap.Modal(document.getElementById('newEntryFromSelectionModal'));
             modal.show();
+            
+            // For debugging
+            console.log('Showing new entry modal with:', {
+                startTime: formatForInput(startDateTime),
+                endTime: formatForInput(endDateTime),
+                slots: selectedSlots.length
+            });
         }
-    });
-</script>
+        // Get z-index correct (entries above slots)
+           document.querySelectorAll('.day-entries').forEach(container => {
+               container.style.zIndex = 5;
+           });
+           
+           // Debug output for time slots
+           console.log('Time slots initialized:', timeSlots.length);
+           
+           // Log click on time slots for debugging
+           timeSlots.forEach(slot => {
+               slot.addEventListener('click', (e) => {
+                   if (!e.target.closest('.time-entry')) {
+                       console.log('Clicked slot:', slot.dataset.date, slot.dataset.time);
+                   }
+               });
+           });
+       });
+   </script>
 {% endblock %}
