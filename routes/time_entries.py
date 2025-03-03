@@ -8,6 +8,12 @@ entries_bp = Blueprint('entries', __name__)
 
 @entries_bp.route('/')
 @login_required
+def index():
+    # Redirect to timeline view as the main dashboard
+    return redirect(url_for('entries.timeline'))
+
+@entries_bp.route('/dashboard')
+@login_required
 def dashboard():
     # Default to today's date
     date_str = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
@@ -56,14 +62,23 @@ def timeline():
     except ValueError:
         selected_date = datetime.now()
     
-    # Get start and end of day
-    start_of_day = datetime.combine(selected_date.date(), datetime.min.time())
-    end_of_day = datetime.combine(selected_date.date(), datetime.max.time())
+    # Calculate the start of the week (Monday)
+    weekday = selected_date.weekday()
+    week_start = selected_date - timedelta(days=weekday)
     
-    # Get entries for the selected day
-    entries = TimeEntry.query.filter_by(user_id=current_user.id).filter(
-        TimeEntry.start_time >= start_of_day,
-        TimeEntry.start_time <= end_of_day
+    # Calculate the end of the week (Sunday)
+    week_end = week_start + timedelta(days=6)
+    
+    # Generate list of weekdays
+    weekdays = [week_start + timedelta(days=i) for i in range(7)]
+    
+    # Get entries for the entire week
+    start_of_week = datetime.combine(week_start.date(), datetime.min.time())
+    end_of_week = datetime.combine(week_end.date(), datetime.max.time())
+    
+    all_entries = TimeEntry.query.filter_by(user_id=current_user.id).filter(
+        TimeEntry.start_time >= start_of_week,
+        TimeEntry.start_time <= end_of_week
     ).order_by(TimeEntry.start_time).all()
     
     # Create forms
@@ -76,11 +91,18 @@ def timeline():
         entry_form.start_time.data = now
         entry_form.end_time.data = now + timedelta(minutes=15)
     
+    today = datetime.now()
+    
     return render_template(
         'time_entries/timeline.html',
-        title='Time Tracker - Timeline',
-        entries=entries,
+        title='Time Tracker - Weekly Timeline',
+        entries=all_entries,
+        all_entries=all_entries,
         selected_date=selected_date,
+        week_start=week_start,
+        week_end=week_end,
+        weekdays=weekdays,
+        today=today,
         entry_form=entry_form,
         quick_form=quick_form,
         timedelta=timedelta
@@ -101,15 +123,15 @@ def create_entry():
         db.session.commit()
         flash('Time entry added!')
         
-        # Redirect to the same day view
-        return redirect(url_for('entries.dashboard', date=form.start_time.data.strftime('%Y-%m-%d')))
+        # Redirect to timeline view
+        return redirect(url_for('entries.timeline', date=form.start_time.data.strftime('%Y-%m-%d')))
     
-    # If validation fails, flash errors and return to dashboard
+    # If validation fails, flash errors and return to timeline
     for field, errors in form.errors.items():
         for error in errors:
             flash(f"{getattr(form, field).label.text}: {error}", "error")
     
-    return redirect(url_for('entries.dashboard'))
+    return redirect(url_for('entries.timeline'))
 
 @entries_bp.route('/entry/quick', methods=['POST'])
 @login_required
@@ -137,7 +159,8 @@ def quick_entry():
         except ValueError:
             flash('Invalid duration format. Please use a number like 0.25 for 15 minutes or 1.5 for 1.5 hours.')
     
-    return redirect(url_for('entries.dashboard'))
+    # Redirect to timeline instead of dashboard
+    return redirect(url_for('entries.timeline'))
 
 @entries_bp.route('/entry/<int:entry_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -147,7 +170,7 @@ def edit_entry(entry_id):
     # Security check - only owner can edit
     if entry.user_id != current_user.id:
         flash('You cannot edit this entry.')
-        return redirect(url_for('entries.dashboard'))
+        return redirect(url_for('entries.timeline'))
     
     form = TimeEntryForm()
     
@@ -163,7 +186,8 @@ def edit_entry(entry_id):
         entry.end_time = form.end_time.data
         db.session.commit()
         flash('Entry updated!')
-        return redirect(url_for('entries.dashboard', date=entry.start_time.strftime('%Y-%m-%d')))
+        # Redirect to timeline view
+        return redirect(url_for('entries.timeline', date=entry.start_time.strftime('%Y-%m-%d')))
     
     return render_template('time_entries/entry_form.html', form=form, entry=entry)
 
@@ -175,11 +199,12 @@ def delete_entry(entry_id):
     # Security check - only owner can delete
     if entry.user_id != current_user.id:
         flash('You cannot delete this entry.')
-        return redirect(url_for('entries.dashboard'))
+        return redirect(url_for('entries.timeline'))
     
     date_str = entry.start_time.strftime('%Y-%m-%d')
     db.session.delete(entry)
     db.session.commit()
     flash('Entry deleted!')
     
-    return redirect(url_for('entries.dashboard', date=date_str))
+    # Redirect to timeline view
+    return redirect(url_for('entries.timeline', date=date_str))

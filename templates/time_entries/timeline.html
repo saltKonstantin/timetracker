@@ -10,12 +10,12 @@
     </div>
     <div class="col-md-6 text-md-end">
         <div class="btn-group">
-            <a href="{{ url_for('entries.timeline', date=(selected_date - timedelta(days=1)).strftime('%Y-%m-%d')) }}" class="btn btn-outline-primary">
-                <span>&laquo; Previous Day</span>
+            <a href="{{ url_for('entries.timeline', date=(selected_date - timedelta(days=7)).strftime('%Y-%m-%d')) }}" class="btn btn-outline-primary">
+                <span>&laquo; Previous Week</span>
             </a>
-            <a href="{{ url_for('entries.timeline') }}" class="btn btn-outline-primary">Today</a>
-            <a href="{{ url_for('entries.timeline', date=(selected_date + timedelta(days=1)).strftime('%Y-%m-%d')) }}" class="btn btn-outline-primary">
-                <span>Next Day &raquo;</span>
+            <a href="{{ url_for('entries.timeline') }}" class="btn btn-outline-primary">Current Week</a>
+            <a href="{{ url_for('entries.timeline', date=(selected_date + timedelta(days=7)).strftime('%Y-%m-%d')) }}" class="btn btn-outline-primary">
+                <span>Next Week &raquo;</span>
             </a>
         </div>
     </div>
@@ -23,7 +23,7 @@
 
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h2 class="h5 mb-0">{{ selected_date.strftime('%A, %B %d, %Y') }}</h2>
+        <h2 class="h5 mb-0">Week of {{ week_start.strftime('%B %d') }} - {{ week_end.strftime('%B %d, %Y') }}</h2>
         <div>
             <a href="{{ url_for('entries.dashboard', date=selected_date.strftime('%Y-%m-%d')) }}" class="btn btn-sm btn-outline-secondary me-2">
                 List View
@@ -34,25 +34,43 @@
         </div>
     </div>
     <div class="card-body">
-        <div class="time-grid-container">
-            <div class="time-labels">
-                {% for hour in range(24) %}
-                <div class="hour-label">{{ "%02d:00"|format(hour) }}</div>
+        <div class="week-view-container">
+            <div class="weekday-headers">
+                {% for day in weekdays %}
+                <div class="weekday-header {% if day.date == today.date() %}today{% endif %}">
+                    <div class="weekday-name">{{ day.strftime('%a') }}</div>
+                    <div class="weekday-date">{{ day.strftime('%d %b') }}</div>
+                </div>
                 {% endfor %}
             </div>
-            <div class="time-grid" id="timeGrid">
-                {% for hour in range(24) %}
-                    {% for minute in [0, 15, 30, 45] %}
-                        <div class="time-slot" 
-                             data-hour="{{ hour }}" 
-                             data-minute="{{ minute }}"
-                             data-time="{{ '%02d:%02d'|format(hour, minute) }}">
-                        </div>
+            
+            <div class="timeline-container">
+                <div class="time-labels">
+                    {% for hour in range(24) %}
+                    <div class="hour-label">{{ "%02d:00"|format(hour) }}</div>
                     {% endfor %}
-                {% endfor %}
-            </div>
-            <div id="timeEntries">
-                <!-- Time entry blocks will be dynamically inserted here by JavaScript -->
+                </div>
+                
+                <div class="week-grid">
+                    {% for day in weekdays %}
+                    <div class="day-column" data-date="{{ day.strftime('%Y-%m-%d') }}">
+                        {% for hour in range(24) %}
+                            {% for minute in [0, 15, 30, 45] %}
+                                <div class="time-slot" 
+                                     data-hour="{{ hour }}" 
+                                     data-minute="{{ minute }}"
+                                     data-date="{{ day.strftime('%Y-%m-%d') }}"
+                                     data-time="{{ '%02d:%02d'|format(hour, minute) }}">
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                        
+                        <div class="day-entries" id="entries-{{ day.strftime('%Y-%m-%d') }}">
+                            <!-- Day entries will be inserted here by JavaScript -->
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
@@ -68,6 +86,7 @@
             </div>
             <div class="modal-body">
                 <p><strong>Description:</strong> <span id="entryInfoDescription"></span></p>
+                <p><strong>Date:</strong> <span id="entryInfoDate"></span></p>
                 <p><strong>Start Time:</strong> <span id="entryInfoStartTime"></span></p>
                 <p><strong>End Time:</strong> <span id="entryInfoEndTime"></span></p>
                 <p><strong>Duration:</strong> <span id="entryInfoDuration"></span></p>
@@ -103,7 +122,7 @@
     </div>
 </div>
 
-<!-- New Entry Modal (same as in dashboard.html) -->
+<!-- New Entry Modal -->
 <div class="modal fade" id="newEntryModal" tabindex="-1" aria-labelledby="newEntryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -223,32 +242,77 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const timeGrid = document.getElementById('timeGrid');
-        const timeEntries = document.getElementById('timeEntries');
-        const currentDate = "{{ selected_date.strftime('%Y-%m-%d') }}";
-        let entries = [];
-        
         // Parse entries data from Jinja
-        {% for entry in entries %}
-        entries.push({
+        let allEntries = [];
+        
+        {% for entry in all_entries %}
+        allEntries.push({
             id: {{ entry.id }},
             description: "{{ entry.description }}",
             start_time: new Date("{{ entry.start_time.isoformat() }}"),
             end_time: new Date("{{ entry.end_time.isoformat() }}"),
+            date: "{{ entry.start_time.strftime('%Y-%m-%d') }}",
             duration_minutes: {{ entry.duration }}
         });
         {% endfor %}
         
+        // Group entries by date
+        const entriesByDate = {};
+        allEntries.forEach(entry => {
+            if (!entriesByDate[entry.date]) {
+                entriesByDate[entry.date] = [];
+            }
+            entriesByDate[entry.date].push(entry);
+        });
+        
+        // Render entries for each day
+        Object.keys(entriesByDate).forEach(date => {
+            const dayEntries = document.getElementById(`entries-${date}`);
+            if (dayEntries) {
+                renderDayEntries(dayEntries, entriesByDate[date], date);
+            }
+        });
+        
         // Selection state
         let isSelecting = false;
         let selectionStart = null;
-        let selectionEnd = null;
+        let selectionCurrentDay = null;
         let selectedSlots = [];
         
-        // Render entries on the timeline
-        function renderEntries() {
+        // Time slot selection
+        const timeSlots = document.querySelectorAll('.time-slot');
+        timeSlots.forEach(slot => {
+            slot.addEventListener('mousedown', (e) => {
+                if (e.button === 0) { // Left mouse button
+                    isSelecting = true;
+                    selectionStart = slot;
+                    selectionCurrentDay = slot.dataset.date;
+                    clearSelection();
+                    slot.classList.add('selected');
+                    selectedSlots.push(slot);
+                }
+            });
+            
+            slot.addEventListener('mouseover', (e) => {
+                if (isSelecting && slot.dataset.date === selectionCurrentDay) {
+                    updateSelection(selectionStart, slot);
+                }
+            });
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isSelecting) {
+                isSelecting = false;
+                if (selectedSlots.length > 0) {
+                    showNewEntryFromSelection();
+                }
+            }
+        });
+        
+        // Render entries for a specific day
+        function renderDayEntries(container, entries, date) {
             // Clear existing entries
-            timeEntries.innerHTML = '';
+            container.innerHTML = '';
             
             // Render each entry
             entries.forEach(entry => {
@@ -278,7 +342,48 @@
                     showEntryDetails(entry);
                 });
                 
-                timeEntries.appendChild(entryEl);
+                container.appendChild(entryEl);
+            });
+        }
+        
+        // Clear current selection
+        function clearSelection() {
+            selectedSlots.forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            selectedSlots = [];
+        }
+        
+        // Update selection between two slots
+        function updateSelection(startSlot, endSlot) {
+            clearSelection();
+            
+            const startHour = parseInt(startSlot.dataset.hour);
+            const startMinute = parseInt(startSlot.dataset.minute);
+            const endHour = parseInt(endSlot.dataset.hour);
+            const endMinute = parseInt(endSlot.dataset.minute);
+            const date = startSlot.dataset.date;
+            
+            // Determine direction
+            let start, end;
+            if (startHour * 60 + startMinute <= endHour * 60 + endMinute) {
+                start = { hour: startHour, minute: startMinute };
+                end = { hour: endHour, minute: endMinute };
+            } else {
+                start = { hour: endHour, minute: endMinute };
+                end = { hour: startHour, minute: startMinute };
+            }
+            
+            // Select all slots in range
+            document.querySelectorAll(`.time-slot[data-date="${date}"]`).forEach(slot => {
+                const hour = parseInt(slot.dataset.hour);
+                const minute = parseInt(slot.dataset.minute);
+                
+                if ((hour > start.hour || (hour === start.hour && minute >= start.minute)) && 
+                    (hour < end.hour || (hour === end.hour && minute <= end.minute))) {
+                    slot.classList.add('selected');
+                    selectedSlots.push(slot);
+                }
             });
         }
         
@@ -298,9 +403,15 @@
             return date.toTimeString().substring(0, 5);
         }
         
+        // Format date as YYYY-MM-DD
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+        
         // Show entry details in modal
         function showEntryDetails(entry) {
             document.getElementById('entryInfoDescription').textContent = entry.description;
+            document.getElementById('entryInfoDate').textContent = new Date(entry.date).toLocaleDateString();
             document.getElementById('entryInfoStartTime').textContent = formatTime(entry.start_time);
             document.getElementById('entryInfoEndTime').textContent = formatTime(entry.end_time);
             
@@ -331,73 +442,6 @@
             modal.show();
         }
         
-        // Time slot selection
-        timeGrid.addEventListener('mousedown', (e) => {
-            if (e.target.classList.contains('time-slot')) {
-                isSelecting = true;
-                selectionStart = e.target;
-                selectionEnd = e.target;
-                updateSelection();
-            }
-        });
-        
-        timeGrid.addEventListener('mouseover', (e) => {
-            if (isSelecting && e.target.classList.contains('time-slot')) {
-                selectionEnd = e.target;
-                updateSelection();
-            }
-        });
-        
-        document.addEventListener('mouseup', () => {
-            if (isSelecting) {
-                isSelecting = false;
-                // If we have a valid selection, show entry creation modal
-                if (selectedSlots.length > 0) {
-                    showNewEntryFromSelection();
-                }
-            }
-        });
-        
-        // Update the visual selection
-        function updateSelection() {
-            // Clear previous selection
-            selectedSlots.forEach(slot => {
-                slot.classList.remove('selected');
-            });
-            selectedSlots = [];
-            
-            if (!selectionStart || !selectionEnd) return;
-            
-            // Get start and end positions
-            const startHour = parseInt(selectionStart.dataset.hour);
-            const startMinute = parseInt(selectionStart.dataset.minute);
-            const endHour = parseInt(selectionEnd.dataset.hour);
-            const endMinute = parseInt(selectionEnd.dataset.minute);
-            
-            // Determine direction
-            let startPos, endPos;
-            if (startHour * 60 + startMinute <= endHour * 60 + endMinute) {
-                startPos = { hour: startHour, minute: startMinute };
-                endPos = { hour: endHour, minute: endMinute };
-            } else {
-                startPos = { hour: endHour, minute: endMinute };
-                endPos = { hour: startHour, minute: startMinute };
-            }
-            
-            // Select all time slots in the range
-            const allSlots = document.querySelectorAll('.time-slot');
-            allSlots.forEach(slot => {
-                const hour = parseInt(slot.dataset.hour);
-                const minute = parseInt(slot.dataset.minute);
-                
-                if ((hour > startPos.hour || (hour === startPos.hour && minute >= startPos.minute)) && 
-                    (hour < endPos.hour || (hour === endPos.hour && minute <= endPos.minute))) {
-                    slot.classList.add('selected');
-                    selectedSlots.push(slot);
-                }
-            });
-        }
-        
         // Show new entry modal with selection times pre-filled
         function showNewEntryFromSelection() {
             if (selectedSlots.length === 0) return;
@@ -410,6 +454,7 @@
             const firstMinute = parseInt(firstSlot.dataset.minute);
             const lastHour = parseInt(lastSlot.dataset.hour);
             const lastMinute = parseInt(lastSlot.dataset.minute);
+            const date = firstSlot.dataset.date;
             
             // Add 15 minutes to the last slot to get end time
             let endHour = lastHour;
@@ -420,13 +465,13 @@
             }
             
             // Set the form values
-            const startDateTime = new Date(currentDate);
+            const startDateTime = new Date(date);
             startDateTime.setHours(firstHour, firstMinute, 0);
             
-            const endDateTime = new Date(currentDate);
+            const endDateTime = new Date(date);
             endDateTime.setHours(endHour, endMinute, 0);
             
-            // Format for the datetime-local input
+            // Format for datetime-local input
             const formatForInput = (date) => {
                 return date.toISOString().substring(0, 16);
             };
@@ -438,9 +483,6 @@
             const modal = new bootstrap.Modal(document.getElementById('newEntryFromSelectionModal'));
             modal.show();
         }
-        
-        // Initial render
-        renderEntries();
     });
 </script>
 {% endblock %}
