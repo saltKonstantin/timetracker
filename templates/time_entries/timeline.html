@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+
+{% block title %}Timeline - TimeTracker{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1>Time Tracker</h1>
+        <p class="lead">Welcome, {{ current_user.username }}!</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <div class="btn-group">
+            <a href="{{ url_for('entries.timeline', date=(selected_date - timedelta(days=1)).strftime('%Y-%m-%d')) }}" class="btn btn-outline-primary">
+                <span>&laquo; Previous Day</span>
+            </a>
+            <a href="{{ url_for('entries.timeline') }}" class="btn btn-outline-primary">Today</a>
+            <a href="{{ url_for('entries.timeline', date=(selected_date + timedelta(days=1)).strftime('%Y-%m-%d')) }}" class="btn btn-outline-primary">
+                <span>Next Day &raquo;</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0">{{ selected_date.strftime('%A, %B %d, %Y') }}</h2>
+        <div>
+            <a href="{{ url_for('entries.dashboard', date=selected_date.strftime('%Y-%m-%d')) }}" class="btn btn-sm btn-outline-secondary me-2">
+                List View
+            </a>
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newEntryModal">
+                Add Time Entry
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="time-grid-container">
+            <div class="time-labels">
+                {% for hour in range(24) %}
+                <div class="hour-label">{{ "%02d:00"|format(hour) }}</div>
+                {% endfor %}
+            </div>
+            <div class="time-grid" id="timeGrid">
+                {% for hour in range(24) %}
+                    {% for minute in [0, 15, 30, 45] %}
+                        <div class="time-slot" 
+                             data-hour="{{ hour }}" 
+                             data-minute="{{ minute }}"
+                             data-time="{{ '%02d:%02d'|format(hour, minute) }}">
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+            <div id="timeEntries">
+                <!-- Time entry blocks will be dynamically inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Entry Info Modal -->
+<div class="modal fade" id="entryInfoModal" tabindex="-1" aria-labelledby="entryInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="entryInfoModalLabel">Entry Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Description:</strong> <span id="entryInfoDescription"></span></p>
+                <p><strong>Start Time:</strong> <span id="entryInfoStartTime"></span></p>
+                <p><strong>End Time:</strong> <span id="entryInfoEndTime"></span></p>
+                <p><strong>Duration:</strong> <span id="entryInfoDuration"></span></p>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="editEntryLink" class="btn btn-primary">Edit</a>
+                <button type="button" id="deleteEntryBtn" class="btn btn-danger">Delete</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the entry "<span id="deleteEntryName"></span>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" action="">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Entry Modal (same as in dashboard.html) -->
+<div class="modal fade" id="newEntryModal" tabindex="-1" aria-labelledby="newEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newEntryModalLabel">Add New Time Entry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" id="entryTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="standard-tab" data-bs-toggle="tab" 
+                                data-bs-target="#standard" type="button" role="tab" 
+                                aria-controls="standard" aria-selected="true">Standard Entry</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="quick-tab" data-bs-toggle="tab" 
+                                data-bs-target="#quick" type="button" role="tab" 
+                                aria-controls="quick" aria-selected="false">Quick Entry</button>
+                    </li>
+                </ul>
+                <div class="tab-content pt-3" id="entryTabsContent">
+                    <div class="tab-pane fade show active" id="standard" role="tabpanel" aria-labelledby="standard-tab">
+                        <form method="post" action="{{ url_for('entries.create_entry') }}">
+                            {{ entry_form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ entry_form.description.label(class="form-label") }}
+                                {{ entry_form.description(class="form-control") }}
+                                {% for error in entry_form.description.errors %}
+                                    <span class="text-danger">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ entry_form.start_time.label(class="form-label") }}
+                                    {{ entry_form.start_time(class="form-control") }}
+                                    {% for error in entry_form.start_time.errors %}
+                                        <span class="text-danger">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ entry_form.end_time.label(class="form-label") }}
+                                    {{ entry_form.end_time(class="form-control") }}
+                                    {% for error in entry_form.end_time.errors %}
+                                        <span class="text-danger">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2">
+                                {{ entry_form.submit(class="btn btn-primary") }}
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="quick" role="tabpanel" aria-labelledby="quick-tab">
+                        <form method="post" action="{{ url_for('entries.quick_entry') }}">
+                            {{ quick_form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ quick_form.description.label(class="form-label") }}
+                                {{ quick_form.description(class="form-control") }}
+                                {% for error in quick_form.description.errors %}
+                                    <span class="text-danger">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="mb-3">
+                                {{ quick_form.duration.label(class="form-label") }}
+                                {{ quick_form.duration(class="form-control", placeholder="e.g. 0.25 for 15 minutes, 1.5 for 1.5 hours") }}
+                                <div class="form-text">Enter hours, e.g. 0.25 for 15 minutes, 1.5 for 1.5 hours</div>
+                                {% for error in quick_form.duration.errors %}
+                                    <span class="text-danger">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="d-grid gap-2">
+                                {{ quick_form.submit(class="btn btn-primary") }}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Entry from Selection Modal -->
+<div class="modal fade" id="newEntryFromSelectionModal" tabindex="-1" aria-labelledby="newEntryFromSelectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newEntryFromSelectionModalLabel">Add New Time Entry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newEntryFromSelectionForm" method="post" action="{{ url_for('entries.create_entry') }}">
+                    {{ entry_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ entry_form.description.label(class="form-label") }}
+                        {{ entry_form.description(class="form-control") }}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ entry_form.start_time.label(class="form-label") }}
+                            {{ entry_form.start_time(class="form-control", id="selectionStartTime") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ entry_form.end_time.label(class="form-label") }}
+                            {{ entry_form.end_time(class="form-control", id="selectionEndTime") }}
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        {{ entry_form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const timeGrid = document.getElementById('timeGrid');
+        const timeEntries = document.getElementById('timeEntries');
+        const currentDate = "{{ selected_date.strftime('%Y-%m-%d') }}";
+        let entries = [];
+        
+        // Parse entries data from Jinja
+        {% for entry in entries %}
+        entries.push({
+            id: {{ entry.id }},
+            description: "{{ entry.description }}",
+            start_time: new Date("{{ entry.start_time.isoformat() }}"),
+            end_time: new Date("{{ entry.end_time.isoformat() }}"),
+            duration_minutes: {{ entry.duration }}
+        });
+        {% endfor %}
+        
+        // Selection state
+        let isSelecting = false;
+        let selectionStart = null;
+        let selectionEnd = null;
+        let selectedSlots = [];
+        
+        // Render entries on the timeline
+        function renderEntries() {
+            // Clear existing entries
+            timeEntries.innerHTML = '';
+            
+            // Render each entry
+            entries.forEach(entry => {
+                const startHour = entry.start_time.getHours();
+                const startMinute = entry.start_time.getMinutes();
+                const endHour = entry.end_time.getHours();
+                const endMinute = entry.end_time.getMinutes();
+                
+                // Calculate position and size
+                const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
+                const endPosition = (endHour * 4) + Math.ceil(endMinute / 15);
+                const entryLength = endPosition - startPosition;
+                
+                // Create entry element
+                const entryEl = document.createElement('div');
+                entryEl.className = 'time-entry';
+                entryEl.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
+                entryEl.style.backgroundColor = getRandomColor(entry.description);
+                entryEl.dataset.entryId = entry.id;
+                entryEl.innerHTML = `
+                    <div class="entry-title">${entry.description}</div>
+                    <div class="entry-time">${formatTime(entry.start_time)} - ${formatTime(entry.end_time)}</div>
+                `;
+                
+                // Add click handler to show entry details
+                entryEl.addEventListener('click', () => {
+                    showEntryDetails(entry);
+                });
+                
+                timeEntries.appendChild(entryEl);
+            });
+        }
+        
+        // Get a deterministic color based on string
+        function getRandomColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            
+            const hue = hash % 360;
+            return `hsla(${hue}, 70%, 80%, 0.8)`;
+        }
+        
+        // Format time as HH:MM
+        function formatTime(date) {
+            return date.toTimeString().substring(0, 5);
+        }
+        
+        // Show entry details in modal
+        function showEntryDetails(entry) {
+            document.getElementById('entryInfoDescription').textContent = entry.description;
+            document.getElementById('entryInfoStartTime').textContent = formatTime(entry.start_time);
+            document.getElementById('entryInfoEndTime').textContent = formatTime(entry.end_time);
+            
+            // Calculate duration in hours and minutes
+            const hours = Math.floor(entry.duration_minutes / 60);
+            const minutes = entry.duration_minutes % 60;
+            document.getElementById('entryInfoDuration').textContent = 
+                `${hours > 0 ? hours + ' hour' + (hours > 1 ? 's' : '') : ''} ${minutes > 0 ? minutes + ' minute' + (minutes > 1 ? 's' : '') : ''}`.trim();
+            
+            // Set up edit link
+            document.getElementById('editEntryLink').href = `/entry/${entry.id}/edit`;
+            
+            // Set up delete button
+            const deleteBtn = document.getElementById('deleteEntryBtn');
+            deleteBtn.onclick = () => {
+                document.getElementById('deleteEntryName').textContent = entry.description;
+                document.getElementById('deleteForm').action = `/entry/${entry.id}/delete`;
+                
+                const entryInfoModal = bootstrap.Modal.getInstance(document.getElementById('entryInfoModal'));
+                entryInfoModal.hide();
+                
+                const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+                deleteModal.show();
+            };
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('entryInfoModal'));
+            modal.show();
+        }
+        
+        // Time slot selection
+        timeGrid.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('time-slot')) {
+                isSelecting = true;
+                selectionStart = e.target;
+                selectionEnd = e.target;
+                updateSelection();
+            }
+        });
+        
+        timeGrid.addEventListener('mouseover', (e) => {
+            if (isSelecting && e.target.classList.contains('time-slot')) {
+                selectionEnd = e.target;
+                updateSelection();
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isSelecting) {
+                isSelecting = false;
+                // If we have a valid selection, show entry creation modal
+                if (selectedSlots.length > 0) {
+                    showNewEntryFromSelection();
+                }
+            }
+        });
+        
+        // Update the visual selection
+        function updateSelection() {
+            // Clear previous selection
+            selectedSlots.forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            selectedSlots = [];
+            
+            if (!selectionStart || !selectionEnd) return;
+            
+            // Get start and end positions
+            const startHour = parseInt(selectionStart.dataset.hour);
+            const startMinute = parseInt(selectionStart.dataset.minute);
+            const endHour = parseInt(selectionEnd.dataset.hour);
+            const endMinute = parseInt(selectionEnd.dataset.minute);
+            
+            // Determine direction
+            let startPos, endPos;
+            if (startHour * 60 + startMinute <= endHour * 60 + endMinute) {
+                startPos = { hour: startHour, minute: startMinute };
+                endPos = { hour: endHour, minute: endMinute };
+            } else {
+                startPos = { hour: endHour, minute: endMinute };
+                endPos = { hour: startHour, minute: startMinute };
+            }
+            
+            // Select all time slots in the range
+            const allSlots = document.querySelectorAll('.time-slot');
+            allSlots.forEach(slot => {
+                const hour = parseInt(slot.dataset.hour);
+                const minute = parseInt(slot.dataset.minute);
+                
+                if ((hour > startPos.hour || (hour === startPos.hour && minute >= startPos.minute)) && 
+                    (hour < endPos.hour || (hour === endPos.hour && minute <= endPos.minute))) {
+                    slot.classList.add('selected');
+                    selectedSlots.push(slot);
+                }
+            });
+        }
+        
+        // Show new entry modal with selection times pre-filled
+        function showNewEntryFromSelection() {
+            if (selectedSlots.length === 0) return;
+            
+            // Find first and last selected slots
+            let firstSlot = selectedSlots[0];
+            let lastSlot = selectedSlots[selectedSlots.length - 1];
+            
+            const firstHour = parseInt(firstSlot.dataset.hour);
+            const firstMinute = parseInt(firstSlot.dataset.minute);
+            const lastHour = parseInt(lastSlot.dataset.hour);
+            const lastMinute = parseInt(lastSlot.dataset.minute);
+            
+            // Add 15 minutes to the last slot to get end time
+            let endHour = lastHour;
+            let endMinute = lastMinute + 15;
+            if (endMinute >= 60) {
+                endHour++;
+                endMinute = 0;
+            }
+            
+            // Set the form values
+            const startDateTime = new Date(currentDate);
+            startDateTime.setHours(firstHour, firstMinute, 0);
+            
+            const endDateTime = new Date(currentDate);
+            endDateTime.setHours(endHour, endMinute, 0);
+            
+            // Format for the datetime-local input
+            const formatForInput = (date) => {
+                return date.toISOString().substring(0, 16);
+            };
+            
+            document.getElementById('selectionStartTime').value = formatForInput(startDateTime);
+            document.getElementById('selectionEndTime').value = formatForInput(endDateTime);
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('newEntryFromSelectionModal'));
+            modal.show();
+        }
+        
+        // Initial render
+        renderEntries();
+    });
+</script>
+{% endblock %}

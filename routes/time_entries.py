@@ -46,6 +46,46 @@ def dashboard():
         timedelta=timedelta
     )
 
+@entries_bp.route('/timeline')
+@login_required
+def timeline():
+    # Default to today's date
+    date_str = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
+    try:
+        selected_date = datetime.strptime(date_str, '%Y-%m-%d')
+    except ValueError:
+        selected_date = datetime.now()
+    
+    # Get start and end of day
+    start_of_day = datetime.combine(selected_date.date(), datetime.min.time())
+    end_of_day = datetime.combine(selected_date.date(), datetime.max.time())
+    
+    # Get entries for the selected day
+    entries = TimeEntry.query.filter_by(user_id=current_user.id).filter(
+        TimeEntry.start_time >= start_of_day,
+        TimeEntry.start_time <= end_of_day
+    ).order_by(TimeEntry.start_time).all()
+    
+    # Create forms
+    entry_form = TimeEntryForm()
+    quick_form = QuickEntryForm()
+    
+    # Default form values to selected date at current time
+    if not request.method == 'POST':
+        now = datetime.now()
+        entry_form.start_time.data = now
+        entry_form.end_time.data = now + timedelta(minutes=15)
+    
+    return render_template(
+        'time_entries/timeline.html',
+        title='Time Tracker - Timeline',
+        entries=entries,
+        selected_date=selected_date,
+        entry_form=entry_form,
+        quick_form=quick_form,
+        timedelta=timedelta
+    )
+
 @entries_bp.route('/entry/new', methods=['POST'])
 @login_required
 def create_entry():
