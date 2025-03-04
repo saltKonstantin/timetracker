@@ -1,12 +1,15 @@
 # TimeTracker Web Application
 
-A simple web application to track time in 15-minute segments. Users can register, log in, and track their time entries throughout the day.
+A web application to track time in 30-minute segments. Users can register, log in, and track their time entries throughout the day with a visual timeline interface.
 
 ## Features
 
 - User registration and authentication with hashed passwords
 - Create, read, update, and delete time entries
-- Track time in 15-minute segments or custom durations
+- Track time in 30-minute segments with visual timeline
+- Drag-and-drop interface for creating and modifying time entries
+- Multi-day entries that span across midnight
+- Categorize entries with emoji-enhanced categories for quick recognition
 - Weekly timeline view to visualize your time entries
 - Analytics dashboard with charts and statistics
 - Date navigation to view entries from different periods
@@ -19,13 +22,14 @@ A simple web application to track time in 15-minute segments. Users can register
 - **Frontend**: HTML, CSS, JavaScript, Bootstrap 5
 - **Authentication**: Flask-Login
 - **Form Handling**: Flask-WTF
+- **Database Migrations**: Flask-Migrate
 
 ## Installation
 
 1. Clone the repository:
    ```
    git clone <repository-url>
-   cd timetracker
+   cd time_tracker
    ```
 
 2. Create and activate a virtual environment:
@@ -49,7 +53,7 @@ A simple web application to track time in 15-minute segments. Users can register
 
 5. Initialize the database:
    ```
-   flask run
+   python app.py
    # The database will be automatically created on first run
    ```
 
@@ -57,12 +61,46 @@ A simple web application to track time in 15-minute segments. Users can register
 
 1. Start the application:
    ```
-   flask run
+   python app.py [--port PORT] [--host HOST]
+   ```
+   
+   By default, the application runs on `127.0.0.1:5000`. On macOS, port 5000 may be used by AirPlay Receiver. 
+   You can specify a different port:
+   ```
+   python app.py --port 8080
    ```
 
-2. Open your browser and navigate to `http://127.0.0.1:5000`
+2. Open your browser and navigate to the URL shown in the terminal (e.g., `http://127.0.0.1:8080`)
 
 3. Register a new account and start tracking your time!
+
+## Using the Timeline
+
+1. **Creating Entries**: Click and drag on the timeline to create a new time entry
+2. **Moving Entries**: Drag an existing entry to move it to a different time
+3. **Resizing Entries**: Drag the top or bottom handle of an entry to change its duration
+4. **Multi-day Entries**: Drag the bottom handle past midnight to create entries that span multiple days
+5. **Categorizing**: Select a category from the dropdown when creating or editing an entry
+6. **Editing Details**: Click on an entry to open the edit modal with additional options
+
+## Available Categories
+
+The application includes the following emoji-enhanced categories:
+
+- 💼 Work
+- 🏠 Personal
+- 👥 Meeting
+- ☕ Break
+- 📋 Administrative
+- 💻 Development
+- 🎨 Design
+- 🔍 Research
+- 📅 Planning
+- 📚 Learning
+- 🏋️ Exercise
+- 📖 Reading
+- ✍️ Writing
+- ✈️ Travel
 
 ## Project Structure
 
@@ -98,10 +136,16 @@ time_tracker/
     └── timetracker.db     # SQLite database
 ```
 
+## Troubleshooting
+
+- **Port 5000 in use**: On macOS, port 5000 is used by AirPlay Receiver. Use `--port 8080` to run on a different port.
+- **Database errors**: If you encounter database errors, try deleting the `instance/timetracker.db` file and restart the application to recreate it.
+- **Missing dependencies**: Ensure all dependencies are installed with `pip install -r requirements.txt`.
+
 ## Future Enhancements
 
 - More detailed analytics and reports
-- Time entry categories/tags
+- Additional category customization
 - Export data to CSV/PDF
 - Team/project tracking capabilities
 - Mobile app integration
