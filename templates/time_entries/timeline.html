@@ -25,9 +25,6 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <h2 class="h5 mb-0">Week of {{ week_start.strftime('%B %d') }} - {{ week_end.strftime('%B %d, %Y') }}</h2>
         <div>
-            <a href="{{ url_for('entries.dashboard', date=selected_date.strftime('%Y-%m-%d')) }}" class="btn btn-sm btn-outline-secondary me-2">
-                List View
-            </a>
             <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newEntryModal">
                 Add Time Entry
             </button>

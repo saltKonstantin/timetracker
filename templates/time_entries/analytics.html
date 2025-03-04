@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="mb-4">Time Tracking Analytics</h1>
+        
+        <!-- Date Range Selector -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Select Date Range</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{{ url_for('entries.analytics') }}" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                               value="{{ start_date.strftime('%Y-%m-%d') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                               value="{{ end_date.strftime('%Y-%m-%d') }}">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Summary Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-header">
+                        <h5 class="card-title">Total Time</h5>
+                    </div>
+                    <div class="card-body">
+                        <h2 class="display-4">{{ "%.1f"|format(total_hours) }}</h2>
+                        <p class="card-text">hours</p>
+                        <p class="card-text text-muted">({{ total_minutes }} minutes)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-header">
+                        <h5 class="card-title">Daily Average</h5>
+                    </div>
+                    <div class="card-body">
+                        <h2 class="display-4">{{ "%.1f"|format(daily_average_minutes / 60) }}</h2>
+                        <p class="card-text">hours per day</p>
+                        <p class="card-text text-muted">({{ "%.0f"|format(daily_average_minutes) }} minutes)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-header">
+                        <h5 class="card-title">Total Entries</h5>
+                    </div>
+                    <div class="card-body">
+                        <h2 class="display-4">{{ total_entries }}</h2>
+                        <p class="card-text">time entries</p>
+                        <p class="card-text text-muted">in selected period</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Time Chart -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title">Daily Hours</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="dailyChart" height="300"></canvas>
+            </div>
+        </div>
+        
+        <!-- Daily Breakdown -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Daily Breakdown</h5>
+            </div>
+            <div class="card-body">
+                {% if days_data %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Day</th>
+                                    <th>Hours</th>
+                                    <th>Entries</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for day in days_data %}
+                                <tr>
+                                    <td>{{ day.date }}</td>
+                                    <td>{{ day.day_name }}</td>
+                                    <td>{{ "%.1f"|format(day.total_minutes / 60) }}</td>
+                                    <td>{{ day.entries|length }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        No time entries found in the selected date range.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Daily hours chart
+    const ctx = document.getElementById('dailyChart').getContext('2d');
+    const dailyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ days_labels|tojson }},
+            datasets: [{
+                label: 'Hours',
+                data: {{ days_values|tojson }},
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Hours'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Day'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.parsed.y.toFixed(1)} hours`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

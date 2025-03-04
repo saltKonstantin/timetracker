@@ -7,7 +7,9 @@ A simple web application to track time in 15-minute segments. Users can register
 - User registration and authentication with hashed passwords
 - Create, read, update, and delete time entries
 - Track time in 15-minute segments or custom durations
-- Date navigation to view entries from different days
+- Weekly timeline view to visualize your time entries
+- Analytics dashboard with charts and statistics
+- Date navigation to view entries from different periods
 - Responsive design that works on desktop and mobile
 
 ## Technology Stack
@@ -82,8 +84,9 @@ time_tracker/
 │   │   ├── login.html
 │   │   └── register.html
 │   └── time_entries/
-│       ├── dashboard.html
-│       └── entry_form.html
+│       ├── timeline.html      # Weekly timeline view
+│       ├── analytics.html     # Analytics dashboard
+│       └── entry_form.html    # Form for editing entries
 │
 ├── static/                # Static files
 │   ├── css/
@@ -97,11 +100,11 @@ time_tracker/
 
 ## Future Enhancements
 
-- Weekly and monthly reports
+- More detailed analytics and reports
 - Time entry categories/tags
-- Data visualization of time spent
 - Export data to CSV/PDF
 - Team/project tracking capabilities
+- Mobile app integration
 
 ## License
 

@@ -15,42 +15,9 @@ def index():
 @entries_bp.route('/dashboard')
 @login_required
 def dashboard():
-    # Default to today's date
-    date_str = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
-    try:
-        selected_date = datetime.strptime(date_str, '%Y-%m-%d')
-    except ValueError:
-        selected_date = datetime.now()
-    
-    # Get start and end of day
-    start_of_day = datetime.combine(selected_date.date(), datetime.min.time())
-    end_of_day = datetime.combine(selected_date.date(), datetime.max.time())
-    
-    # Get entries for the selected day
-    entries = TimeEntry.query.filter_by(user_id=current_user.id).filter(
-        TimeEntry.start_time >= start_of_day,
-        TimeEntry.start_time <= end_of_day
-    ).order_by(TimeEntry.start_time).all()
-    
-    # Create forms
-    entry_form = TimeEntryForm()
-    quick_form = QuickEntryForm()
-    
-    # Default form values to selected date at current time
-    if not request.method == 'POST':
-        now = datetime.now()
-        entry_form.start_time.data = now
-        entry_form.end_time.data = now + timedelta(minutes=15)
-    
-    return render_template(
-        'time_entries/dashboard.html',
-        title='Time Tracker',
-        entries=entries,
-        selected_date=selected_date,
-        entry_form=entry_form,
-        quick_form=quick_form,
-        timedelta=timedelta
-    )
+    # This route is deprecated but kept for backward compatibility
+    # Redirect to timeline view
+    return redirect(url_for('entries.timeline'))
 
 @entries_bp.route('/timeline')
 @login_required
@@ -232,3 +199,74 @@ def delete_entry(entry_id):
     
     # Redirect to timeline view
     return redirect(url_for('entries.timeline', date=date_str))
+
+@entries_bp.route('/analytics')
+@login_required
+def analytics():
+    # Get the date range for analytics (default to current month)
+    today = datetime.now()
+    start_date_str = request.args.get('start_date', today.replace(day=1).strftime('%Y-%m-%d'))
+    end_date_str = request.args.get('end_date', today.strftime('%Y-%m-%d'))
+    
+    try:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+    except ValueError:
+        start_date = today.replace(day=1)
+        end_date = today
+    
+    # Ensure end date includes the full day
+    start_of_period = datetime.combine(start_date.date(), datetime.min.time())
+    end_of_period = datetime.combine(end_date.date(), datetime.max.time())
+    
+    # Get all entries in the date range
+    entries = TimeEntry.query.filter_by(user_id=current_user.id).filter(
+        TimeEntry.start_time >= start_of_period,
+        TimeEntry.start_time <= end_of_period
+    ).order_by(TimeEntry.start_time).all()
+    
+    # Calculate total time spent
+    total_minutes = sum(entry.duration for entry in entries)
+    total_hours = total_minutes / 60
+    
+    # Group entries by day
+    days_data = {}
+    for entry in entries:
+        day_key = entry.start_time.strftime('%Y-%m-%d')
+        if day_key not in days_data:
+            days_data[day_key] = {
+                'date': entry.start_time.strftime('%Y-%m-%d'),
+                'day_name': entry.start_time.strftime('%A'),
+                'total_minutes': 0,
+                'entries': []
+            }
+        days_data[day_key]['total_minutes'] += entry.duration
+        days_data[day_key]['entries'].append(entry)
+    
+    # Sort days chronologically
+    days_sorted = sorted(days_data.values(), key=lambda x: x['date'])
+    
+    # Calculate daily average (excluding days with no entries)
+    if days_data:
+        daily_average_minutes = total_minutes / len(days_data)
+    else:
+        daily_average_minutes = 0
+    
+    # Prepare data for charts
+    days_labels = [day['day_name'] for day in days_sorted]
+    days_values = [day['total_minutes'] / 60 for day in days_sorted]  # Convert to hours for display
+    
+    return render_template(
+        'time_entries/analytics.html',
+        title='Time Tracker - Analytics',
+        entries=entries,
+        total_entries=len(entries),
+        total_minutes=total_minutes,
+        total_hours=total_hours,
+        daily_average_minutes=daily_average_minutes,
+        days_data=days_sorted,
+        days_labels=days_labels,
+        days_values=days_values,
+        start_date=start_date,
+        end_date=end_date
+    )
