@@ -108,6 +108,7 @@ def update_entry_ajax():
     entry_id = data.get('id')
     new_start = data.get('start_time')
     new_end = data.get('end_time')
+    new_description = data.get('description')
     
     entry = TimeEntry.query.get_or_404(entry_id)
     
@@ -131,6 +132,10 @@ def update_entry_ajax():
         # Store the updated times
         entry.start_time = start_time
         entry.end_time = end_time
+        
+        # Update description if provided
+        if new_description is not None:
+            entry.description = new_description
         
         db.session.commit()
         return jsonify({'success': True})

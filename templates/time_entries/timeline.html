@@ -3,6 +3,74 @@
 {% block title %}Timeline - TimeTracker{% endblock %}
 
 {% block content %}
+<style>
+    /* Multi-day entry styles */
+    .time-entry.continues-next-day {
+        border-bottom: none;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        position: relative;
+    }
+    
+    .time-entry.continues-next-day::after {
+        content: "▼";
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .time-entry.continued-from-prev-day {
+        border-top: none;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        position: relative;
+    }
+    
+    .time-entry.continued-from-prev-day::before {
+        content: "▲";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        color: rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Entry popup styles */
+    .entry-popup .modal-content {
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .entry-popup .modal-header {
+        padding: 10px 15px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .entry-popup .modal-body {
+        padding: 15px;
+    }
+    
+    .entry-popup .modal-footer {
+        padding: 10px 15px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    /* Custom positioning for entry popup */
+    .entry-popup .modal-dialog {
+        transition: none !important;
+    }
+    
+    /* Remove backdrop for entry popup */
+    .modal.entry-popup-mode {
+        background-color: transparent !important;
+    }
+</style>
+
 <div class="row mb-4">
     <div class="col-md-6">
         <h1>Time Tracker</h1>
@@ -76,23 +144,65 @@
 
 <!-- Entry Info Modal -->
 <div class="modal fade" id="entryInfoModal" tabindex="-1" aria-labelledby="entryInfoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog entry-popup">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="entryInfoModalLabel">Entry Details</h5>
+                <h5 class="modal-title" id="entryInfoModalLabel">Edit Time Entry</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p><strong>Description:</strong> <span id="entryInfoDescription"></span></p>
-                <p><strong>Date:</strong> <span id="entryInfoDate"></span></p>
-                <p><strong>Start Time:</strong> <span id="entryInfoStartTime"></span></p>
-                <p><strong>End Time:</strong> <span id="entryInfoEndTime"></span></p>
-                <p><strong>Duration:</strong> <span id="entryInfoDuration"></span></p>
+                <div id="entryViewMode">
+                    <p><strong>Description:</strong> <span id="entryInfoDescription"></span></p>
+                    <p><strong>Date:</strong> <span id="entryInfoDate"></span></p>
+                    <p><strong>Start Time:</strong> <span id="entryInfoStartTime"></span></p>
+                    <p><strong>End Time:</strong> <span id="entryInfoEndTime"></span></p>
+                    <p><strong>Duration:</strong> <span id="entryInfoDuration"></span></p>
+                </div>
+                <div id="entryEditMode" style="display: none;">
+                    <form id="editEntryForm" method="post">
+                        <div class="mb-3">
+                            <label for="editEntryDescription" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="editEntryDescription" name="description" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editEntryCategory" class="form-label">Category (Coming Soon)</label>
+                            <select class="form-control" id="editEntryCategory" name="category" disabled>
+                                <option value="">Select a category</option>
+                                <option value="work">Work</option>
+                                <option value="personal">Personal</option>
+                                <option value="meeting">Meeting</option>
+                                <option value="break">Break</option>
+                            </select>
+                            <small class="form-text text-muted">Category support will be added in a future update.</small>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editEntryStartTime" class="form-label">Start Time</label>
+                                <input type="datetime-local" class="form-control" id="editEntryStartTime" name="start_time" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editEntryEndTime" class="form-label">End Time</label>
+                                <input type="datetime-local" class="form-control" id="editEntryEndTime" name="end_time" required>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="button" id="saveEntryBtn" class="btn btn-success">Save Changes</button>
+                            <button type="button" id="deleteEntryBtn2" class="btn btn-danger">Delete</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
             </div>
             <div class="modal-footer">
-                <a href="#" id="editEntryLink" class="btn btn-primary">Edit</a>
-                <button type="button" id="deleteEntryBtn" class="btn btn-danger">Delete</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div id="entryViewButtons">
+                    <button type="button" id="editModeBtn" class="btn btn-primary">Edit</button>
+                    <button type="button" id="deleteEntryBtn" class="btn btn-danger">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+                <div id="entryEditButtons" style="display: none;">
+                    <button type="button" id="saveEntryBtn2" class="btn btn-success">Save</button>
+                    <button type="button" id="cancelEditBtn" class="btn btn-secondary">Cancel</button>
+                </div>
             </div>
         </div>
     </div>
@@ -288,11 +398,18 @@
         let entryStartTime = null;
         let entryEndTime = null;
         let entryDate = null;
+        let isResizingTop = false;
+        
+        // Track if mouse has moved since mousedown
+        let hasMoved = false;
         
         // Time slot selection
         const timeSlots = document.querySelectorAll('.time-slot');
         timeSlots.forEach(slot => {
             slot.addEventListener('mousedown', (e) => {
+                // Reset hasMoved on mousedown
+                hasMoved = false;
+                
                 // Make sure we're not clicking on an entry or already dragging/resizing
                 if (e.button === 0 && !isDragging && !isResizing && !e.target.closest('.time-entry')) {
                     isSelecting = true;
@@ -314,12 +431,18 @@
             });
         });
         
+        // Track mouse movement
+        document.addEventListener('mousemove', () => {
+            hasMoved = true;
+        });
+        
         document.addEventListener('mouseup', (e) => {
             if (isSelecting) {
                 isSelecting = false;
-                if (selectedSlots.length > 0) {
-                    showNewEntryFromSelection();
-                }
+                // Comment out the following lines to prevent the pop-up
+                // if (selectedSlots.length > 0) {
+                //     showNewEntryFromSelection();
+                // }
             }
             
             if (isDragging || isResizing) {
@@ -332,6 +455,11 @@
                     draggedEntry = null;
                 }
             }
+            
+            // Reset hasMoved after a short delay
+            setTimeout(() => {
+                hasMoved = false;
+            }, 50);
         });
         
         // Render entries for a specific day
@@ -354,7 +482,52 @@
                 // Create entry element
                 const entryEl = document.createElement('div');
                 entryEl.className = 'time-entry';
-                entryEl.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
+                
+                // Check if this is a multi-day entry
+                const startDate = new Date(entry.date);
+                const endDate = new Date(entry.end_time);
+                const isMultiDayEntry = startDate.toDateString() !== endDate.toDateString();
+                
+                // For entries that start on this day
+                if (date === entry.date) {
+                    if (isMultiDayEntry) {
+                        // If entry spans multiple days, extend to end of day
+                        const endOfDayPosition = 24 * 4; // End of day (24 hours * 4 slots per hour)
+                        const partialEntryLength = endOfDayPosition - startPosition;
+                        entryEl.style.gridRow = `${startPosition + 1} / span ${partialEntryLength}`;
+                        entryEl.classList.add('continues-next-day');
+                    } else {
+                        // Normal single-day entry
+                        entryEl.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
+                    }
+                } 
+                // For entries that end on this day but started on a previous day
+                else if (date === endDate.toISOString().split('T')[0] && date !== entry.date) {
+                    // Entry ends on this day but started on a previous day
+                    entryEl.style.gridRow = `1 / span ${endPosition}`;
+                    entryEl.classList.add('continued-from-prev-day');
+                }
+                // For entries that span this entire day (middle day of a multi-day entry)
+                else if (isMultiDayEntry) {
+                    const entryStartDate = new Date(entry.date);
+                    const entryEndDate = new Date(entry.end_time);
+                    const currentDate = new Date(date);
+                    
+                    // Check if current date is between start and end dates
+                    if (currentDate > entryStartDate && currentDate < entryEndDate) {
+                        // This day is completely spanned by the entry
+                        entryEl.style.gridRow = `1 / span ${24 * 4}`; // Full day
+                        entryEl.classList.add('continued-from-prev-day');
+                        entryEl.classList.add('continues-next-day');
+                    } else {
+                        // Skip this entry for days it doesn't belong to
+                        return;
+                    }
+                } else {
+                    // Skip this entry for days it doesn't belong to
+                    return;
+                }
+                
                 entryEl.style.backgroundColor = getRandomColor(entry.description);
                 entryEl.dataset.entryId = entry.id;
                 
@@ -362,18 +535,25 @@
                 entryEl.dataset.startTime = toLocalISOString(entry.start_time);
                 entryEl.dataset.endTime = toLocalISOString(entry.end_time);
                 entryEl.dataset.date = entry.date;
+                entryEl.dataset.isMultiDay = isMultiDayEntry;
                 
+                // Make the entry clickable by adding a link
                 entryEl.innerHTML = `
+                    <div class="entry-resize-handle top-handle"></div>
                     <div class="entry-title">${entry.description}</div>
                     <div class="entry-time">${formatTime(entry.start_time)} - ${formatTime(entry.end_time)}</div>
-                    <div class="entry-resize-handle"></div>
+                    <div class="entry-resize-handle bottom-handle"></div>
                 `;
                 
                 // Add event listeners for dragging the entry
                 entryEl.addEventListener('mousedown', (e) => {
+                    // Reset hasMoved on mousedown
+                    hasMoved = false;
+                    
                     if (e.target.classList.contains('entry-resize-handle')) {
                         // Resize handling
                         e.stopPropagation();
+                        e.preventDefault();
                         isResizing = true;
                         draggedEntry = entryEl;
                         resizeStartY = e.clientY;
@@ -381,9 +561,13 @@
                         entryStartTime = new Date(entryEl.dataset.startTime);
                         entryEndTime = new Date(entryEl.dataset.endTime);
                         entryDate = entryEl.dataset.date;
+                        
+                        // Determine if we're resizing from top or bottom
+                        isResizingTop = e.target.classList.contains('top-handle');
                     } else if (!e.target.closest('a') && !e.target.closest('button')) {
                         // Drag handling (avoid when clicking links or buttons inside the entry)
                         e.stopPropagation();
+                        e.preventDefault();
                         isDragging = true;
                         draggedEntry = entryEl;
                         dragStartY = e.clientY;
@@ -397,10 +581,26 @@
                     }
                 });
                 
-                // Add click handler to show entry details
+                // Add click handler to show entry details in a popup
                 entryEl.addEventListener('click', (e) => {
-                    if (!isDragging && !isResizing) {
-                        showEntryDetails(entry);
+                    // Only show popup if we're not dragging or resizing and haven't moved the mouse
+                    if (!hasMoved && !isDragging && !isResizing) {
+                        e.stopPropagation();
+                        
+                        // Get the position of the clicked entry
+                        const rect = entryEl.getBoundingClientRect();
+                        const entryRight = rect.right;
+                        const entryTop = rect.top;
+                        
+                        // Show entry details in the modal and go directly to edit mode
+                        showEntryDetails({
+                            id: entry.id,
+                            description: entry.description,
+                            date: entry.date,
+                            start_time: entry.start_time,
+                            end_time: entry.end_time,
+                            duration_minutes: entry.duration_minutes
+                        }, true, { x: entryRight, y: entryTop });
                     }
                 });
                 
@@ -421,20 +621,46 @@
                     const newStartTime = new Date(entryStartTime.getTime() + (slotsToMove * 15 * 60 * 1000));
                     const newEndTime = new Date(newStartTime.getTime() + durationMs);
                     
+                    // Check if we've moved to a different day
+                    const originalDate = new Date(entryDate);
+                    const newDate = new Date(newStartTime);
+                    newDate.setHours(0, 0, 0, 0);
+                    originalDate.setHours(0, 0, 0, 0);
+                    
                     // Update the element's position
                     const startHour = newStartTime.getHours();
                     const startMinute = newStartTime.getMinutes();
                     const endHour = newEndTime.getHours();
                     const endMinute = newEndTime.getMinutes();
                     
-                    const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
-                    const endPosition = (endHour * 4) + Math.ceil(endMinute / 15);
-                    const entryLength = endPosition - startPosition;
-                    
-                    draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
+                    // If we're still on the same day, update the position
+                    if (newDate.getTime() === originalDate.getTime()) {
+                        const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
+                        const endPosition = (endHour * 4) + Math.ceil(endMinute / 15);
+                        const entryLength = endPosition - startPosition;
+                        
+                        draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
+                    } else {
+                        // We've moved to a different day, mark as multi-day
+                        draggedEntry.dataset.isMultiDay = "true";
+                        
+                        // If we're moving to a previous day
+                        if (newDate < originalDate) {
+                            // Make it start from the beginning of the current day view
+                            draggedEntry.style.gridRow = `1 / span ${24 * 4}`;
+                            draggedEntry.classList.add('continued-from-prev-day');
+                        } else {
+                            // Moving to a next day, make it go to the end of the current day
+                            const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
+                            const endOfDayPosition = 24 * 4; // End of day
+                            const entryLength = endOfDayPosition - startPosition;
+                            
+                            draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
+                            draggedEntry.classList.add('continues-next-day');
+                        }
+                    }
                     
                     // Update the data attributes with ISO strings without timezone info
-                    // This ensures consistent timezone handling between client and server
                     draggedEntry.dataset.startTime = toLocalISOString(newStartTime);
                     draggedEntry.dataset.endTime = toLocalISOString(newEndTime);
                     
@@ -455,35 +681,110 @@
                 const slotsToResize = Math.round(deltaY / slotHeight);
                 
                 if (slotsToResize !== 0) {
-                    // Only allow resizing the end time
-                    const newEndTime = new Date(entryEndTime.getTime() + (slotsToResize * 15 * 60 * 1000));
-                    
-                    // Make sure end time is not before start time
-                    if (newEndTime > entryStartTime) {
-                        // Update the element's size
-                        const startHour = entryStartTime.getHours();
-                        const startMinute = entryStartTime.getMinutes();
-                        const endHour = newEndTime.getHours();
-                        const endMinute = newEndTime.getMinutes();
+                    if (isResizingTop) {
+                        // Resizing from the top - adjust start time
+                        const newStartTime = new Date(entryStartTime.getTime() + (slotsToResize * 15 * 60 * 1000));
                         
-                        const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
-                        const endPosition = (endHour * 4) + Math.ceil(endMinute / 15);
-                        const entryLength = endPosition - startPosition;
-                        
-                        draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
-                        
-                        // Update the data attributes with ISO strings without timezone info
-                        draggedEntry.dataset.endTime = toLocalISOString(newEndTime);
-                        
-                        // Update displayed time
-                        const timeDisplay = draggedEntry.querySelector('.entry-time');
-                        if (timeDisplay) {
-                            timeDisplay.textContent = `${formatTime(entryStartTime)} - ${formatTime(newEndTime)}`;
+                        // Make sure start time is not after end time
+                        if (newStartTime < entryEndTime) {
+                            // Check if we've moved to a different day
+                            const originalStartDate = new Date(entryDate);
+                            const newStartDate = new Date(newStartTime);
+                            originalStartDate.setHours(0, 0, 0, 0);
+                            newStartDate.setHours(0, 0, 0, 0);
+                            
+                            // If we're still on the same day, update the position
+                            if (newStartDate.getTime() === originalStartDate.getTime()) {
+                                const startHour = newStartTime.getHours();
+                                const startMinute = newStartTime.getMinutes();
+                                const endHour = entryEndTime.getHours();
+                                const endMinute = entryEndTime.getMinutes();
+                                
+                                const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
+                                const endPosition = (endHour * 4) + Math.ceil(endMinute / 15);
+                                const entryLength = endPosition - startPosition;
+                                
+                                draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
+                            } else {
+                                // We've moved to a different day, mark as multi-day
+                                draggedEntry.dataset.isMultiDay = "true";
+                                
+                                // If we're extending to a previous day
+                                if (newStartDate < originalStartDate) {
+                                    // Make it start from the beginning of the current day view
+                                    draggedEntry.style.gridRow = `1 / span ${24 * 4}`;
+                                    draggedEntry.classList.add('continued-from-prev-day');
+                                }
+                            }
+                            
+                            // Update the data attributes with ISO strings without timezone info
+                            draggedEntry.dataset.startTime = toLocalISOString(newStartTime);
+                            
+                            // Update displayed time
+                            const timeDisplay = draggedEntry.querySelector('.entry-time');
+                            if (timeDisplay) {
+                                timeDisplay.textContent = `${formatTime(newStartTime)} - ${formatTime(entryEndTime)}`;
+                            }
+                            
+                            // Reset resize start position
+                            resizeStartY = e.clientY;
+                            entryStartTime = newStartTime;
                         }
+                    } else {
+                        // Resizing from the bottom - adjust end time
+                        const newEndTime = new Date(entryEndTime.getTime() + (slotsToResize * 15 * 60 * 1000));
                         
-                        // Reset resize start position
-                        resizeStartY = e.clientY;
-                        entryEndTime = newEndTime;
+                        // Make sure end time is not before start time
+                        if (newEndTime > entryStartTime) {
+                            // Check if we've moved to a different day
+                            const originalEndDate = new Date(entryEndTime);
+                            const newEndDate = new Date(newEndTime);
+                            originalEndDate.setHours(0, 0, 0, 0);
+                            newEndDate.setHours(0, 0, 0, 0);
+                            
+                            // If we're still on the same day, update the position
+                            if (newEndDate.getTime() === originalEndDate.getTime()) {
+                                const startHour = entryStartTime.getHours();
+                                const startMinute = entryStartTime.getMinutes();
+                                const endHour = newEndTime.getHours();
+                                const endMinute = newEndTime.getMinutes();
+                                
+                                const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
+                                const endPosition = (endHour * 4) + Math.ceil(endMinute / 15);
+                                const entryLength = endPosition - startPosition;
+                                
+                                draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
+                            } else {
+                                // We've moved to a different day, mark as multi-day
+                                draggedEntry.dataset.isMultiDay = "true";
+                                
+                                // If we're extending to the next day, make it go to the end of the current day
+                                if (newEndDate > originalEndDate) {
+                                    const startHour = entryStartTime.getHours();
+                                    const startMinute = entryStartTime.getMinutes();
+                                    
+                                    const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
+                                    const endOfDayPosition = 24 * 4; // End of day
+                                    const entryLength = endOfDayPosition - startPosition;
+                                    
+                                    draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
+                                    draggedEntry.classList.add('continues-next-day');
+                                }
+                            }
+                            
+                            // Update the data attributes with ISO strings without timezone info
+                            draggedEntry.dataset.endTime = toLocalISOString(newEndTime);
+                            
+                            // Update displayed time
+                            const timeDisplay = draggedEntry.querySelector('.entry-time');
+                            if (timeDisplay) {
+                                timeDisplay.textContent = `${formatTime(entryStartTime)} - ${formatTime(newEndTime)}`;
+                            }
+                            
+                            // Reset resize start position
+                            resizeStartY = e.clientY;
+                            entryEndTime = newEndTime;
+                        }
                     }
                 }
             }
@@ -494,6 +795,7 @@
             const entryId = entryEl.dataset.entryId;
             const startTime = entryEl.dataset.startTime;
             const endTime = entryEl.dataset.endTime;
+            const isMultiDay = entryEl.dataset.isMultiDay === "true";
             
             // Remove the dragging class
             entryEl.classList.remove('dragging');
@@ -515,15 +817,16 @@
             .then(data => {
                 if (!data.success) {
                     console.error('Failed to update entry:', data.message);
-                    alert('Failed to update entry: ' + data.message);
-                    // Reload the page to refresh the entries
+                    // Silently reload the page without showing an alert
+                    window.location.reload();
+                } else if (isMultiDay) {
+                    // If this is a multi-day entry, reload the page to show it properly across days
                     window.location.reload();
                 }
             })
             .catch(error => {
                 console.error('Error updating entry:', error);
-                alert('An error occurred while updating the entry. Please try again.');
-                // Reload the page to refresh the entries
+                // Silently reload the page without showing an alert
                 window.location.reload();
             });
         }
@@ -607,7 +910,19 @@
         }
         
         // Show entry details in modal
-        function showEntryDetails(entry) {
+        function showEntryDetails(entry, showEditMode = false, position = null) {
+            // Store the current entry ID in the modal for reference
+            const modal = document.getElementById('entryInfoModal');
+            modal.dataset.entryId = entry.id;
+            
+            // Add a class to the modal for custom styling when using popup mode
+            if (position) {
+                modal.classList.add('entry-popup-mode');
+            } else {
+                modal.classList.remove('entry-popup-mode');
+            }
+            
+            // Populate view mode fields
             document.getElementById('entryInfoDescription').textContent = entry.description;
             document.getElementById('entryInfoDate').textContent = new Date(entry.date).toLocaleDateString();
             document.getElementById('entryInfoStartTime').textContent = formatTime(entry.start_time);
@@ -619,25 +934,156 @@
             document.getElementById('entryInfoDuration').textContent = 
                 `${hours > 0 ? hours + ' hour' + (hours > 1 ? 's' : '') : ''} ${minutes > 0 ? minutes + ' minute' + (minutes > 1 ? 's' : '') : ''}`.trim();
             
-            // Set up edit link
-            document.getElementById('editEntryLink').href = `/entry/${entry.id}/edit`;
+            // Populate edit mode fields
+            document.getElementById('editEntryDescription').value = entry.description;
+            
+            // Format for datetime-local input
+            const formatForInput = (date) => {
+                const localISOString = new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+                    .toISOString()
+                    .substring(0, 16);
+                return localISOString;
+            };
+            
+            document.getElementById('editEntryStartTime').value = formatForInput(entry.start_time);
+            document.getElementById('editEntryEndTime').value = formatForInput(entry.end_time);
             
             // Set up delete button
             const deleteBtn = document.getElementById('deleteEntryBtn');
-            deleteBtn.onclick = () => {
-                document.getElementById('deleteEntryName').textContent = entry.description;
-                document.getElementById('deleteForm').action = `/entry/${entry.id}/delete`;
-                
-                const entryInfoModal = bootstrap.Modal.getInstance(document.getElementById('entryInfoModal'));
-                entryInfoModal.hide();
-                
-                const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-                deleteModal.show();
+            const deleteBtn2 = document.getElementById('deleteEntryBtn2');
+            
+            const setupDeleteButton = (btn) => {
+                btn.onclick = () => {
+                    document.getElementById('deleteEntryName').textContent = entry.description;
+                    document.getElementById('deleteForm').action = `/entry/${entry.id}/delete`;
+                    
+                    const entryInfoModal = bootstrap.Modal.getInstance(document.getElementById('entryInfoModal'));
+                    entryInfoModal.hide();
+                    
+                    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+                    deleteModal.show();
+                };
             };
             
+            setupDeleteButton(deleteBtn);
+            setupDeleteButton(deleteBtn2);
+            
+            // Set up edit mode button
+            const editModeBtn = document.getElementById('editModeBtn');
+            editModeBtn.onclick = () => {
+                // Switch to edit mode
+                document.getElementById('entryViewMode').style.display = 'none';
+                document.getElementById('entryEditMode').style.display = 'block';
+                document.getElementById('entryViewButtons').style.display = 'none';
+                document.getElementById('entryEditButtons').style.display = 'block';
+            };
+            
+            // Set up save button
+            const saveEntryBtn = document.getElementById('saveEntryBtn');
+            const saveEntryBtn2 = document.getElementById('saveEntryBtn2');
+            
+            const setupSaveButton = (btn) => {
+                btn.onclick = () => {
+                    // Get values from form
+                    const description = document.getElementById('editEntryDescription').value;
+                    const startTime = document.getElementById('editEntryStartTime').value;
+                    const endTime = document.getElementById('editEntryEndTime').value;
+                    
+                    // Convert to ISO strings
+                    const startTimeISO = new Date(startTime).toISOString();
+                    const endTimeISO = new Date(endTime).toISOString();
+                    
+                    // Send update to server
+                    fetch('/entry/update', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token() if csrf_token else "" }}'
+                        },
+                        body: JSON.stringify({
+                            id: entry.id,
+                            description: description,
+                            start_time: startTimeISO,
+                            end_time: endTimeISO
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Close the modal and reload the page to show updated entries
+                            const entryInfoModal = bootstrap.Modal.getInstance(document.getElementById('entryInfoModal'));
+                            entryInfoModal.hide();
+                            window.location.reload();
+                        } else {
+                            console.error('Failed to update entry:', data.message);
+                            alert('Failed to update entry: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating entry:', error);
+                        alert('Error updating entry. Please try again.');
+                    });
+                };
+            };
+            
+            setupSaveButton(saveEntryBtn);
+            setupSaveButton(saveEntryBtn2);
+            
+            // Show in edit mode directly if requested
+            if (showEditMode) {
+                document.getElementById('entryViewMode').style.display = 'none';
+                document.getElementById('entryEditMode').style.display = 'block';
+                document.getElementById('entryViewButtons').style.display = 'none';
+                document.getElementById('entryEditButtons').style.display = 'block';
+            } else {
+                // Reset to view mode when opening
+                document.getElementById('entryViewMode').style.display = 'block';
+                document.getElementById('entryEditMode').style.display = 'none';
+                document.getElementById('entryViewButtons').style.display = 'block';
+                document.getElementById('entryEditButtons').style.display = 'none';
+            }
+            
             // Show the modal
-            const modal = new bootstrap.Modal(document.getElementById('entryInfoModal'));
-            modal.show();
+            const modalInstance = new bootstrap.Modal(modal);
+            modalInstance.show();
+            
+            // Position the modal next to the entry if position is provided
+            if (position) {
+                // Wait for the modal to be fully visible
+                setTimeout(() => {
+                    const modalDialog = modal.querySelector('.modal-dialog');
+                    
+                    // Calculate position to ensure the modal stays within viewport
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    const modalWidth = modalDialog.offsetWidth;
+                    const modalHeight = modalDialog.offsetHeight;
+                    
+                    // Position to the right of the entry, with fallback to left if not enough space
+                    let left = position.x + 10; // 10px offset from entry
+                    if (left + modalWidth > viewportWidth) {
+                        left = Math.max(0, position.x - modalWidth - 10);
+                    }
+                    
+                    // Center vertically relative to the entry position
+                    let top = position.y - (modalHeight / 2);
+                    // Ensure modal stays within viewport
+                    top = Math.max(10, Math.min(viewportHeight - modalHeight - 10, top));
+                    
+                    // Apply custom positioning
+                    modalDialog.style.position = 'absolute';
+                    modalDialog.style.margin = '0';
+                    modalDialog.style.left = `${left}px`;
+                    modalDialog.style.top = `${top}px`;
+                    
+                    // Ensure the modal backdrop doesn't interfere with our custom positioning
+                    modal.style.paddingLeft = '0';
+                    modal.style.paddingRight = '0';
+                    
+                    // Focus on the description field
+                    document.getElementById('editEntryDescription').focus();
+                }, 150);
+            }
         }
         
         // Show new entry modal with selection times pre-filled
