@@ -28,7 +28,7 @@ class RegistrationForm(FlaskForm):
             raise ValidationError('Please use a different email address.')
 
 class TimeEntryForm(FlaskForm):
-    description = StringField('Description', validators=[DataRequired(), Length(max=200)])
+    description = StringField('Description', validators=[Length(max=200)])
     start_time = DateTimeLocalField('Start Time', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
     end_time = DateTimeLocalField('End Time', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
     submit = SubmitField('Save')
@@ -38,6 +38,6 @@ class TimeEntryForm(FlaskForm):
             raise ValidationError('End time must be after start time')
 
 class QuickEntryForm(FlaskForm):
-    description = StringField('Description', validators=[DataRequired(), Length(max=200)])
+    description = StringField('Description', validators=[Length(max=200)])
     duration = StringField('Duration (in hours)', validators=[DataRequired()])
     submit = SubmitField('Save')

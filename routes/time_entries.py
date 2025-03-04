@@ -84,9 +84,17 @@ def create_entry():
         # Get category from form data if it exists
         category = request.form.get('category', None)
         
+        # Ensure category is provided
+        if not category:
+            flash('Category is required', 'error')
+            return redirect(url_for('entries.timeline'))
+        
+        # Use empty string if description is None
+        description = form.description.data or ''
+        
         entry = TimeEntry(
             user_id=current_user.id,
-            description=form.description.data,
+            description=description,
             category=category,
             start_time=form.start_time.data,
             end_time=form.end_time.data
@@ -112,8 +120,12 @@ def update_entry_ajax():
     entry_id = data.get('id')
     new_start = data.get('start_time')
     new_end = data.get('end_time')
-    new_description = data.get('description')
+    new_description = data.get('description', '')
     new_category = data.get('category')
+    
+    # Ensure category is provided
+    if not new_category:
+        return jsonify({'success': False, 'message': 'Category is required'}), 400
     
     entry = TimeEntry.query.get_or_404(entry_id)
     
@@ -139,12 +151,10 @@ def update_entry_ajax():
         entry.end_time = end_time
         
         # Update description if provided
-        if new_description is not None:
-            entry.description = new_description
+        entry.description = new_description
             
-        # Update category if provided
-        if new_category is not None:
-            entry.category = new_category
+        # Update category
+        entry.category = new_category
         
         db.session.commit()
         return jsonify({'success': True})
@@ -165,13 +175,21 @@ def quick_entry():
             # Get category from form data if it exists
             category = request.form.get('category', None)
             
+            # Ensure category is provided
+            if not category:
+                flash('Category is required', 'error')
+                return redirect(url_for('entries.timeline'))
+            
+            # Use empty string if description is None
+            description = form.description.data or ''
+            
             # Create entry starting now
             start_time = datetime.now()
             end_time = start_time + timedelta(minutes=duration_minutes)
             
             entry = TimeEntry(
                 user_id=current_user.id,
-                description=form.description.data,
+                description=description,
                 category=category,
                 start_time=start_time,
                 end_time=end_time
@@ -314,6 +332,10 @@ def create_entry_ajax():
         end_time = datetime.fromisoformat(data.get('end_time'))
         description = data.get('description', '')
         category = data.get('category', None)
+        
+        # Ensure category is provided
+        if not category:
+            return jsonify({'error': 'Category is required'}), 400
         
         # Create the new entry
         entry = TimeEntry(
