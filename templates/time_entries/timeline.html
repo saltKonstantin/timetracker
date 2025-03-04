@@ -39,7 +39,7 @@
     
     /* Category styles */
     .entry-category {
-        font-size: 0.8rem;
+        font-size: 0.9rem;
         font-weight: bold;
         text-transform: uppercase;
         margin-bottom: 2px;
@@ -86,6 +86,22 @@
     
     .time-entry[data-category="learning"] {
         background-color: rgba(211, 84, 0, 0.8) !important;
+    }
+    
+    .time-entry[data-category="exercise"] {
+        background-color: rgba(46, 204, 113, 0.8) !important;
+    }
+    
+    .time-entry[data-category="reading"] {
+        background-color: rgba(231, 76, 60, 0.8) !important;
+    }
+    
+    .time-entry[data-category="writing"] {
+        background-color: rgba(241, 196, 15, 0.8) !important;
+    }
+    
+    .time-entry[data-category="travel"] {
+        background-color: rgba(230, 126, 34, 0.8) !important;
     }
     
     .time-entry[data-category="other"] {
@@ -176,7 +192,7 @@
                     {% for day in weekdays %}
                     <div class="day-column" data-date="{{ day.strftime('%Y-%m-%d') }}">
                         {% for hour in range(24) %}
-                            {% for minute in [0, 15, 30, 45] %}
+                            {% for minute in [0, 30] %}
                                 <div class="time-slot" 
                                      data-hour="{{ hour }}" 
                                      data-minute="{{ minute }}"
@@ -219,17 +235,21 @@
                             <label for="editEntryCategory" class="form-label">Category</label>
                             <select class="form-control" id="editEntryCategory" name="category" required>
                                 <option value="">Select a category</option>
-                                <option value="work">Work</option>
-                                <option value="personal">Personal</option>
-                                <option value="meeting">Meeting</option>
-                                <option value="break">Break</option>
-                                <option value="admin">Administrative</option>
-                                <option value="development">Development</option>
-                                <option value="design">Design</option>
-                                <option value="research">Research</option>
-                                <option value="planning">Planning</option>
-                                <option value="learning">Learning</option>
-                                <option value="other">Other</option>
+                                <option value="work">💼 Work</option>
+                                <option value="personal">🏠 Personal</option>
+                                <option value="meeting">👥 Meeting</option>
+                                <option value="break">☕ Break</option>
+                                <option value="admin">📋 Administrative</option>
+                                <option value="development">💻 Development</option>
+                                <option value="design">🎨 Design</option>
+                                <option value="research">🔍 Research</option>
+                                <option value="planning">📅 Planning</option>
+                                <option value="learning">📚 Learning</option>
+                                <option value="exercise">🏋️ Exercise</option>
+                                <option value="reading">📖 Reading</option>
+                                <option value="writing">✍️ Writing</option>
+                                <option value="travel">✈️ Travel</option>
+                                <option value="other">❓ Other</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -320,17 +340,21 @@
                                 <label for="category" class="form-label">Category</label>
                                 <select class="form-control" id="category" name="category" required>
                                     <option value="">Select a category</option>
-                                    <option value="work">Work</option>
-                                    <option value="personal">Personal</option>
-                                    <option value="meeting">Meeting</option>
-                                    <option value="break">Break</option>
-                                    <option value="admin">Administrative</option>
-                                    <option value="development">Development</option>
-                                    <option value="design">Design</option>
-                                    <option value="research">Research</option>
-                                    <option value="planning">Planning</option>
-                                    <option value="learning">Learning</option>
-                                    <option value="other">Other</option>
+                                    <option value="work">💼 Work</option>
+                                    <option value="personal">🏠 Personal</option>
+                                    <option value="meeting">👥 Meeting</option>
+                                    <option value="break">☕ Break</option>
+                                    <option value="admin">📋 Administrative</option>
+                                    <option value="development">💻 Development</option>
+                                    <option value="design">🎨 Design</option>
+                                    <option value="research">🔍 Research</option>
+                                    <option value="planning">📅 Planning</option>
+                                    <option value="learning">📚 Learning</option>
+                                    <option value="exercise">🏋️ Exercise</option>
+                                    <option value="reading">📖 Reading</option>
+                                    <option value="writing">✍️ Writing</option>
+                                    <option value="travel">✈️ Travel</option>
+                                    <option value="other">❓ Other</option>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -368,17 +392,21 @@
                                 <label for="quick_category" class="form-label">Category</label>
                                 <select class="form-control" id="quick_category" name="category" required>
                                     <option value="">Select a category</option>
-                                    <option value="work">Work</option>
-                                    <option value="personal">Personal</option>
-                                    <option value="meeting">Meeting</option>
-                                    <option value="break">Break</option>
-                                    <option value="admin">Administrative</option>
-                                    <option value="development">Development</option>
-                                    <option value="design">Design</option>
-                                    <option value="research">Research</option>
-                                    <option value="planning">Planning</option>
-                                    <option value="learning">Learning</option>
-                                    <option value="other">Other</option>
+                                    <option value="work">💼 Work</option>
+                                    <option value="personal">🏠 Personal</option>
+                                    <option value="meeting">👥 Meeting</option>
+                                    <option value="break">☕ Break</option>
+                                    <option value="admin">📋 Administrative</option>
+                                    <option value="development">💻 Development</option>
+                                    <option value="design">🎨 Design</option>
+                                    <option value="research">🔍 Research</option>
+                                    <option value="planning">📅 Planning</option>
+                                    <option value="learning">📚 Learning</option>
+                                    <option value="exercise">🏋️ Exercise</option>
+                                    <option value="reading">📖 Reading</option>
+                                    <option value="writing">✍️ Writing</option>
+                                    <option value="travel">✈️ Travel</option>
+                                    <option value="other">❓ Other</option>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -422,17 +450,21 @@
                         <label for="selectionCategory" class="form-label">Category</label>
                         <select class="form-control" id="selectionCategory" name="category" required>
                             <option value="">Select a category</option>
-                            <option value="work">Work</option>
-                            <option value="personal">Personal</option>
-                            <option value="meeting">Meeting</option>
-                            <option value="break">Break</option>
-                            <option value="admin">Administrative</option>
-                            <option value="development">Development</option>
-                            <option value="design">Design</option>
-                            <option value="research">Research</option>
-                            <option value="planning">Planning</option>
-                            <option value="learning">Learning</option>
-                            <option value="other">Other</option>
+                            <option value="work">💼 Work</option>
+                            <option value="personal">🏠 Personal</option>
+                            <option value="meeting">👥 Meeting</option>
+                            <option value="break">☕ Break</option>
+                            <option value="admin">📋 Administrative</option>
+                            <option value="development">💻 Development</option>
+                            <option value="design">🎨 Design</option>
+                            <option value="research">🔍 Research</option>
+                            <option value="planning">📅 Planning</option>
+                            <option value="learning">📚 Learning</option>
+                            <option value="exercise">🏋️ Exercise</option>
+                            <option value="reading">📖 Reading</option>
+                            <option value="writing">✍️ Writing</option>
+                            <option value="travel">✈️ Travel</option>
+                            <option value="other">❓ Other</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -587,8 +619,8 @@
                 const endMinute = entry.end_time.getMinutes();
                 
                 // Calculate position and size
-                const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
-                const endPosition = (endHour * 4) + Math.ceil(endMinute / 15);
+                const startPosition = (startHour * 2) + Math.floor(startMinute / 30);
+                const endPosition = (endHour * 2) + Math.ceil(endMinute / 30);
                 const entryLength = endPosition - startPosition;
                 
                 // Create entry element
@@ -598,16 +630,54 @@
                 // Check if this is a multi-day entry
                 const startDate = new Date(entry.date);
                 const endDate = new Date(entry.end_time);
-                const isMultiDayEntry = startDate.toDateString() !== endDate.toDateString();
+                startDate.setHours(0, 0, 0, 0);
+                endDate.setHours(0, 0, 0, 0);
+                const isMultiDayEntry = startDate.getTime() !== endDate.getTime();
                 
                 // For entries that start on this day
                 if (date === entry.date) {
                     if (isMultiDayEntry) {
                         // If entry spans multiple days, extend to end of day
-                        const endOfDayPosition = 24 * 4; // End of day (24 hours * 4 slots per hour)
+                        const endOfDayPosition = 24 * 2; // End of day (24 hours * 2 slots per hour)
                         const partialEntryLength = endOfDayPosition - startPosition;
                         entryEl.style.gridRow = `${startPosition + 1} / span ${partialEntryLength}`;
                         entryEl.classList.add('continues-next-day');
+                        entryEl.dataset.isMultiDay = "true";
+                        
+                        // Store the original entry ID for the continuation entry
+                        entryEl.dataset.entryId = entry.id;
+                        
+                        // Create continuation entries for subsequent days if they're in the current view
+                        const nextDayDate = new Date(startDate);
+                        nextDayDate.setDate(nextDayDate.getDate() + 1);
+                        
+                        // Check if the next day is within the end date
+                        if (nextDayDate.getTime() <= endDate.getTime()) {
+                            const nextDayDateStr = nextDayDate.toISOString().split('T')[0];
+                            const nextDayColumn = document.querySelector(`.day-column[data-date="${nextDayDateStr}"]`);
+                            
+                            if (nextDayColumn) {
+                                // Calculate the end position for the continuation entry
+                                let continuationEndPosition;
+                                
+                                // If the entry ends on the next day
+                                if (nextDayDate.getTime() === endDate.getTime()) {
+                                    // End at the actual end time
+                                    continuationEndPosition = endHour * 2 + Math.ceil(endMinute / 30);
+                                } else {
+                                    // Entry continues beyond the next day, so fill the entire day
+                                    continuationEndPosition = 24 * 2;
+                                }
+                                
+                                // Create a continuation entry in the next day column
+                                createContinuationEntry(
+                                    nextDayColumn, 
+                                    entry, 
+                                    0, // Start from beginning of day
+                                    continuationEndPosition // End at the calculated position
+                                );
+                            }
+                        }
                     } else {
                         // Normal single-day entry
                         entryEl.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
@@ -618,19 +688,34 @@
                     // Entry ends on this day but started on a previous day
                     entryEl.style.gridRow = `1 / span ${endPosition}`;
                     entryEl.classList.add('continued-from-prev-day');
+                    entryEl.dataset.isMultiDay = "true";
+                    
+                    // Mark as a continuation entry
+                    entryEl.dataset.isContinuation = "true";
+                    entryEl.dataset.originalEntryId = entry.id;
+                    entryEl.dataset.date = date;
                 }
                 // For entries that span this entire day (middle day of a multi-day entry)
                 else if (isMultiDayEntry) {
                     const entryStartDate = new Date(entry.date);
                     const entryEndDate = new Date(entry.end_time);
                     const currentDate = new Date(date);
+                    entryStartDate.setHours(0, 0, 0, 0);
+                    entryEndDate.setHours(0, 0, 0, 0);
+                    currentDate.setHours(0, 0, 0, 0);
                     
                     // Check if current date is between start and end dates
                     if (currentDate > entryStartDate && currentDate < entryEndDate) {
                         // This day is completely spanned by the entry
-                        entryEl.style.gridRow = `1 / span ${24 * 4}`; // Full day
+                        entryEl.style.gridRow = `1 / span ${24 * 2}`; // Full day
                         entryEl.classList.add('continued-from-prev-day');
                         entryEl.classList.add('continues-next-day');
+                        entryEl.dataset.isMultiDay = "true";
+                        
+                        // Mark as a continuation entry
+                        entryEl.dataset.isContinuation = "true";
+                        entryEl.dataset.originalEntryId = entry.id;
+                        entryEl.dataset.date = date;
                     } else {
                         // Skip this entry for days it doesn't belong to
                         return;
@@ -648,14 +733,32 @@
                 entryEl.dataset.startTime = toLocalISOString(entry.start_time);
                 entryEl.dataset.endTime = toLocalISOString(entry.end_time);
                 entryEl.dataset.date = entry.date;
-                entryEl.dataset.isMultiDay = isMultiDayEntry;
+                
+                // Determine the display time based on the entry type
+                let displayStartTime, displayEndTime;
+                
+                if (entryEl.classList.contains('continued-from-prev-day')) {
+                    // For continuation entries, start time is 00:00
+                    displayStartTime = "00:00";
+                } else {
+                    // Normal start time
+                    displayStartTime = formatTime(entry.start_time);
+                }
+                
+                if (entryEl.classList.contains('continues-next-day')) {
+                    // For entries that continue to next day, end time is 23:59
+                    displayEndTime = "23:59";
+                } else {
+                    // Normal end time
+                    displayEndTime = formatTime(entry.end_time);
+                }
                 
                 // Make the entry clickable by adding a link
                 entryEl.innerHTML = `
                     <div class="entry-resize-handle top-handle"></div>
-                    <div class="entry-category">${entry.category || 'other'}</div>
+                    <div class="entry-category">${getCategoryWithEmoji(entry.category || 'other')}</div>
                     <div class="entry-title">${entry.description}</div>
-                    <div class="entry-time">${formatTime(entry.start_time)} - ${formatTime(entry.end_time)}</div>
+                    <div class="entry-time">${displayStartTime} - ${displayEndTime}</div>
                     <div class="entry-resize-handle bottom-handle"></div>
                 `;
                 
@@ -706,10 +809,23 @@
                         const entryRight = rect.right;
                         const entryTop = rect.top;
                         
+                        // If this is a continuation entry, find the original entry
+                        if (entryEl.dataset.isContinuation === "true") {
+                            const originalEntryId = entryEl.dataset.originalEntryId;
+                            const originalEntry = allEntries.find(entry => entry.id == originalEntryId);
+                            
+                            if (originalEntry) {
+                                // Show entry details in the modal and go directly to edit mode
+                                showEntryDetails(originalEntry, true, { x: entryRight, y: entryTop });
+                                return;
+                            }
+                        }
+                        
                         // Show entry details in the modal and go directly to edit mode
                         showEntryDetails({
                             id: entry.id,
                             description: entry.description,
+                            category: entry.category,
                             date: entry.date,
                             start_time: entry.start_time,
                             end_time: entry.end_time,
@@ -722,17 +838,109 @@
             });
         }
         
+        // Helper function to create a continuation entry
+        function createContinuationEntry(dayColumn, originalEntry, startPosition, endPosition) {
+            const entryEl = document.createElement('div');
+            entryEl.className = 'time-entry continued-from-prev-day';
+            entryEl.style.gridRow = `${startPosition + 1} / span ${endPosition - startPosition}`;
+            
+            // Mark as a continuation entry
+            entryEl.dataset.isContinuation = "true";
+            entryEl.dataset.originalEntryId = originalEntry.id;
+            entryEl.dataset.category = originalEntry.category || 'other';
+            entryEl.dataset.date = dayColumn.dataset.date;
+            
+            // Store ISO strings without timezone info for consistent handling
+            entryEl.dataset.startTime = toLocalISOString(originalEntry.start_time);
+            entryEl.dataset.endTime = toLocalISOString(originalEntry.end_time);
+            
+            // Make the entry clickable by adding a link
+            entryEl.innerHTML = `
+                <div class="entry-resize-handle top-handle"></div>
+                <div class="entry-category">${getCategoryWithEmoji(originalEntry.category || 'other')}</div>
+                <div class="entry-title">${originalEntry.description}</div>
+                <div class="entry-time">00:00 - ${formatTime(originalEntry.end_time)}</div>
+                <div class="entry-resize-handle bottom-handle"></div>
+            `;
+            
+            // Add the same event listeners as regular entries
+            entryEl.addEventListener('mousedown', (e) => {
+                // Reset hasMoved on mousedown
+                hasMoved = false;
+                
+                if (e.target.classList.contains('entry-resize-handle')) {
+                    // Resize handling for continuation entries
+                    e.stopPropagation();
+                    e.preventDefault();
+                    isResizing = true;
+                    draggedEntry = entryEl;
+                    resizeStartY = e.clientY;
+                    originalEntryHeight = entryEl.offsetHeight;
+                    entryStartTime = new Date(entryEl.dataset.startTime);
+                    entryEndTime = new Date(entryEl.dataset.endTime);
+                    entryDate = dayColumn.dataset.date;
+                    
+                    // Determine if we're resizing from top or bottom
+                    isResizingTop = e.target.classList.contains('top-handle');
+                } else if (!e.target.closest('a') && !e.target.closest('button')) {
+                    // Drag handling for continuation entries
+                    e.stopPropagation();
+                    e.preventDefault();
+                    isDragging = true;
+                    draggedEntry = entryEl;
+                    dragStartY = e.clientY;
+                    originalEntryTop = entryEl.offsetTop;
+                    entryStartTime = new Date(entryEl.dataset.startTime);
+                    entryEndTime = new Date(entryEl.dataset.endTime);
+                    entryDate = dayColumn.dataset.date;
+                    
+                    // Highlight the entry being dragged
+                    entryEl.classList.add('dragging');
+                }
+            });
+            
+            // Add click handler to show entry details in a popup
+            entryEl.addEventListener('click', (e) => {
+                // Only show popup if we're not dragging or resizing and haven't moved the mouse
+                if (!hasMoved && !isDragging && !isResizing) {
+                    e.stopPropagation();
+                    
+                    // Get the position of the clicked entry
+                    const rect = entryEl.getBoundingClientRect();
+                    const entryRight = rect.right;
+                    const entryTop = rect.top;
+                    
+                    // Find the original entry data
+                    const originalEntryId = entryEl.dataset.originalEntryId;
+                    const originalEntry = allEntries.find(entry => entry.id == originalEntryId);
+                    
+                    if (originalEntry) {
+                        // Show entry details in the modal and go directly to edit mode
+                        showEntryDetails(originalEntry, true, { x: entryRight, y: entryTop });
+                    }
+                }
+            });
+            
+            // Add to the day column
+            const entriesContainer = dayColumn.querySelector('.day-entries');
+            if (entriesContainer) {
+                entriesContainer.appendChild(entryEl);
+            }
+            
+            return entryEl;
+        }
+        
         // Handle mouse move for dragging and resizing
         document.addEventListener('mousemove', (e) => {
             if (isDragging && draggedEntry) {
                 const deltaY = e.clientY - dragStartY;
-                const slotHeight = 8; // Height of one 15-minute slot in pixels
+                const slotHeight = 40; // Height of one 30-minute slot in pixels
                 const slotsToMove = Math.round(deltaY / slotHeight);
                 
                 if (slotsToMove !== 0) {
                     // Calculate new times
                     const durationMs = entryEndTime.getTime() - entryStartTime.getTime();
-                    const newStartTime = new Date(entryStartTime.getTime() + (slotsToMove * 15 * 60 * 1000));
+                    const newStartTime = new Date(entryStartTime.getTime() + (slotsToMove * 30 * 60 * 1000));
                     const newEndTime = new Date(newStartTime.getTime() + durationMs);
                     
                     // Check if we've moved to a different day
@@ -749,8 +957,8 @@
                     
                     // If we're still on the same day, update the position
                     if (newDate.getTime() === originalDate.getTime()) {
-                        const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
-                        const endPosition = (endHour * 4) + Math.ceil(endMinute / 15);
+                        const startPosition = (startHour * 2) + Math.floor(startMinute / 30);
+                        const endPosition = (endHour * 2) + Math.ceil(endMinute / 30);
                         const entryLength = endPosition - startPosition;
                         
                         draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
@@ -761,12 +969,12 @@
                         // If we're moving to a previous day
                         if (newDate < originalDate) {
                             // Make it start from the beginning of the current day view
-                            draggedEntry.style.gridRow = `1 / span ${24 * 4}`;
+                            draggedEntry.style.gridRow = `1 / span ${24 * 2}`;
                             draggedEntry.classList.add('continued-from-prev-day');
                         } else {
                             // Moving to a next day, make it go to the end of the current day
-                            const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
-                            const endOfDayPosition = 24 * 4; // End of day
+                            const startPosition = (startHour * 2) + Math.floor(startMinute / 30);
+                            const endOfDayPosition = 24 * 2; // End of day
                             const entryLength = endOfDayPosition - startPosition;
                             
                             draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
@@ -791,13 +999,13 @@
                 }
             } else if (isResizing && draggedEntry) {
                 const deltaY = e.clientY - resizeStartY;
-                const slotHeight = 8; // Height of one 15-minute slot in pixels
+                const slotHeight = 40; // Height of one 30-minute slot in pixels
                 const slotsToResize = Math.round(deltaY / slotHeight);
                 
                 if (slotsToResize !== 0) {
                     if (isResizingTop) {
                         // Resizing from the top - adjust start time
-                        const newStartTime = new Date(entryStartTime.getTime() + (slotsToResize * 15 * 60 * 1000));
+                        const newStartTime = new Date(entryStartTime.getTime() + (slotsToResize * 30 * 60 * 1000));
                         
                         // Make sure start time is not after end time
                         if (newStartTime < entryEndTime) {
@@ -814,8 +1022,8 @@
                                 const endHour = entryEndTime.getHours();
                                 const endMinute = entryEndTime.getMinutes();
                                 
-                                const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
-                                const endPosition = (endHour * 4) + Math.ceil(endMinute / 15);
+                                const startPosition = (startHour * 2) + Math.floor(startMinute / 30);
+                                const endPosition = (endHour * 2) + Math.ceil(endMinute / 30);
                                 const entryLength = endPosition - startPosition;
                                 
                                 draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
@@ -826,7 +1034,7 @@
                                 // If we're extending to a previous day
                                 if (newStartDate < originalStartDate) {
                                     // Make it start from the beginning of the current day view
-                                    draggedEntry.style.gridRow = `1 / span ${24 * 4}`;
+                                    draggedEntry.style.gridRow = `1 / span ${24 * 2}`;
                                     draggedEntry.classList.add('continued-from-prev-day');
                                 }
                             }
@@ -846,7 +1054,7 @@
                         }
                     } else {
                         // Resizing from the bottom - adjust end time
-                        const newEndTime = new Date(entryEndTime.getTime() + (slotsToResize * 15 * 60 * 1000));
+                        const newEndTime = new Date(entryEndTime.getTime() + (slotsToResize * 30 * 60 * 1000));
                         
                         // Make sure end time is not before start time
                         if (newEndTime > entryStartTime) {
@@ -863,8 +1071,8 @@
                                 const endHour = newEndTime.getHours();
                                 const endMinute = newEndTime.getMinutes();
                                 
-                                const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
-                                const endPosition = (endHour * 4) + Math.ceil(endMinute / 15);
+                                const startPosition = (startHour * 2) + Math.floor(startMinute / 30);
+                                const endPosition = (endHour * 2) + Math.ceil(endMinute / 30);
                                 const entryLength = endPosition - startPosition;
                                 
                                 draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
@@ -877,12 +1085,137 @@
                                     const startHour = entryStartTime.getHours();
                                     const startMinute = entryStartTime.getMinutes();
                                     
-                                    const startPosition = (startHour * 4) + Math.floor(startMinute / 15);
-                                    const endOfDayPosition = 24 * 4; // End of day
+                                    const startPosition = (startHour * 2) + Math.floor(startMinute / 30);
+                                    const endOfDayPosition = 24 * 2; // End of day
                                     const entryLength = endOfDayPosition - startPosition;
                                     
+                                    // Apply continues-next-day class if not already present
+                                    if (!draggedEntry.classList.contains('continues-next-day')) {
+                                        draggedEntry.classList.add('continues-next-day');
+                                    }
+                                    
+                                    // Update the current entry to extend to the end of the day
                                     draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
-                                    draggedEntry.classList.add('continues-next-day');
+                                    
+                                    // Find the next day column
+                                    const currentDayColumn = draggedEntry.closest('.day-column');
+                                    const nextDayDate = new Date(entryDate);
+                                    nextDayDate.setDate(nextDayDate.getDate() + 1);
+                                    const nextDayDateStr = nextDayDate.toISOString().split('T')[0];
+                                    const nextDayColumn = document.querySelector(`.day-column[data-date="${nextDayDateStr}"]`);
+                                    
+                                    // If the next day column exists in the current view
+                                    if (nextDayColumn) {
+                                        // Check if we already have a continuation entry
+                                        const entryId = draggedEntry.dataset.entryId || draggedEntry.dataset.originalEntryId;
+                                        let continuationEntry = nextDayColumn.querySelector(`.time-entry[data-original-entry-id="${entryId}"]`);
+                                        
+                                        if (!continuationEntry) {
+                                            // Create a continuation entry in the next day column
+                                            continuationEntry = document.createElement('div');
+                                            continuationEntry.className = 'time-entry continued-from-prev-day';
+                                            continuationEntry.dataset.originalEntryId = entryId;
+                                            continuationEntry.dataset.isContinuation = "true";
+                                            continuationEntry.dataset.category = draggedEntry.dataset.category;
+                                            continuationEntry.dataset.startTime = draggedEntry.dataset.startTime;
+                                            continuationEntry.dataset.endTime = toLocalISOString(newEndTime);
+                                            continuationEntry.dataset.date = nextDayDateStr;
+                                            
+                                            // Copy the content from the original entry
+                                            const description = draggedEntry.querySelector('.entry-title')?.textContent || '';
+                                            const category = draggedEntry.dataset.category || 'other';
+                                            
+                                            continuationEntry.innerHTML = `
+                                                <div class="entry-resize-handle top-handle"></div>
+                                                <div class="entry-category">${getCategoryWithEmoji(category)}</div>
+                                                <div class="entry-title">${description}</div>
+                                                <div class="entry-time">00:00 - ${formatTime(newEndTime)}</div>
+                                                <div class="entry-resize-handle bottom-handle"></div>
+                                            `;
+                                            
+                                            // Add the same event listeners as regular entries
+                                            continuationEntry.addEventListener('mousedown', (e) => {
+                                                // Reset hasMoved on mousedown
+                                                hasMoved = false;
+                                                
+                                                if (e.target.classList.contains('entry-resize-handle')) {
+                                                    // Resize handling for continuation entries
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    isResizing = true;
+                                                    draggedEntry = continuationEntry;
+                                                    resizeStartY = e.clientY;
+                                                    originalEntryHeight = continuationEntry.offsetHeight;
+                                                    entryStartTime = new Date(continuationEntry.dataset.startTime);
+                                                    entryEndTime = new Date(continuationEntry.dataset.endTime);
+                                                    entryDate = nextDayDateStr;
+                                                    
+                                                    // Determine if we're resizing from top or bottom
+                                                    isResizingTop = e.target.classList.contains('top-handle');
+                                                } else if (!e.target.closest('a') && !e.target.closest('button')) {
+                                                    // Drag handling for continuation entries
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    isDragging = true;
+                                                    draggedEntry = continuationEntry;
+                                                    dragStartY = e.clientY;
+                                                    originalEntryTop = continuationEntry.offsetTop;
+                                                    entryStartTime = new Date(continuationEntry.dataset.startTime);
+                                                    entryEndTime = new Date(continuationEntry.dataset.endTime);
+                                                    entryDate = nextDayDateStr;
+                                                    
+                                                    // Highlight the entry being dragged
+                                                    continuationEntry.classList.add('dragging');
+                                                }
+                                            });
+                                            
+                                            // Add click handler to show entry details in a popup
+                                            continuationEntry.addEventListener('click', (e) => {
+                                                // Only show popup if we're not dragging or resizing and haven't moved the mouse
+                                                if (!hasMoved && !isDragging && !isResizing) {
+                                                    e.stopPropagation();
+                                                    
+                                                    // Get the position of the clicked entry
+                                                    const rect = continuationEntry.getBoundingClientRect();
+                                                    const entryRight = rect.right;
+                                                    const entryTop = rect.top;
+                                                    
+                                                    // Find the original entry data
+                                                    const originalEntryId = continuationEntry.dataset.originalEntryId;
+                                                    const originalEntry = allEntries.find(entry => entry.id == originalEntryId);
+                                                    
+                                                    if (originalEntry) {
+                                                        // Show entry details in the modal and go directly to edit mode
+                                                        showEntryDetails(originalEntry, true, { x: entryRight, y: entryTop });
+                                                    }
+                                                }
+                                            });
+                                            
+                                            // Add to the next day's entries container
+                                            const nextDayEntries = nextDayColumn.querySelector('.day-entries');
+                                            if (nextDayEntries) {
+                                                nextDayEntries.appendChild(continuationEntry);
+                                            }
+                                        }
+                                        
+                                        // Calculate the end position in the next day
+                                        const nextDayEndHour = newEndTime.getHours();
+                                        const nextDayEndMinute = newEndTime.getMinutes();
+                                        const nextDayEndPosition = (nextDayEndHour * 2) + Math.ceil(nextDayEndMinute / 30);
+                                        
+                                        // Update the continuation entry's position and size
+                                        // Start from position 1 (00:00) and span to the end time
+                                        continuationEntry.style.gridRow = `1 / span ${nextDayEndPosition}`;
+                                        
+                                        // Update the data attributes
+                                        continuationEntry.dataset.endTime = toLocalISOString(newEndTime);
+                                        
+                                        // Update the displayed time
+                                        const timeDisplay = continuationEntry.querySelector('.entry-time');
+                                        if (timeDisplay) {
+                                            timeDisplay.textContent = `00:00 - ${formatTime(newEndTime)}`;
+                                        }
+                                    }
                                 }
                             }
                             
@@ -906,16 +1239,69 @@
         
         // Save entry changes to the server
         function saveEntryChanges(entryEl) {
-            const entryId = entryEl.dataset.entryId;
+            const entryId = entryEl.dataset.entryId || entryEl.dataset.originalEntryId;
             const startTime = entryEl.dataset.startTime;
-            const endTime = entryEl.dataset.endTime;
+            let endTime = entryEl.dataset.endTime;
             const isMultiDay = entryEl.dataset.isMultiDay === "true";
+            const isContinuation = entryEl.dataset.isContinuation === "true";
             const category = entryEl.dataset.category || 'other';
             
             // Remove the dragging class
             entryEl.classList.remove('dragging');
             
-            // Send the update to the server
+            // For multi-day entries, find the continuation entry to get the correct end time
+            if (isMultiDay && entryEl.classList.contains('continues-next-day')) {
+                // Get the date of the current entry
+                const currentDate = new Date(entryEl.dataset.date || entryEl.closest('.day-column').dataset.date);
+                
+                // Calculate the next day's date
+                const nextDayDate = new Date(currentDate);
+                nextDayDate.setDate(nextDayDate.getDate() + 1);
+                const nextDayDateStr = nextDayDate.toISOString().split('T')[0];
+                
+                // Find the continuation entry in the next day column
+                const nextDayColumn = document.querySelector(`.day-column[data-date="${nextDayDateStr}"]`);
+                if (nextDayColumn) {
+                    const continuationEntry = nextDayColumn.querySelector(`.time-entry[data-original-entry-id="${entryId}"]`);
+                    if (continuationEntry) {
+                        // Use the end time from the continuation entry
+                        const continuationEndTime = continuationEntry.dataset.endTime;
+                        if (continuationEndTime) {
+                            endTime = continuationEndTime;
+                        }
+                    }
+                }
+            }
+            
+            // If this is a continuation entry, we need to find the original entry
+            // and update its end time
+            if (isContinuation) {
+                const originalEntryId = entryEl.dataset.originalEntryId;
+                if (originalEntryId) {
+                    // Find the original entry in the DOM
+                    const originalEntry = document.querySelector(`.time-entry[data-entry-id="${originalEntryId}"]`);
+                    if (originalEntry) {
+                        // Update the original entry's end time
+                        originalEntry.dataset.endTime = endTime;
+                        
+                        // Send the update to the server with the original entry's start time
+                        // and this continuation entry's end time
+                        sendEntryUpdate(originalEntryId, category, originalEntry.dataset.startTime, endTime, true);
+                        return;
+                    }
+                }
+                
+                // If we couldn't find the original entry, just use this entry's data
+                sendEntryUpdate(originalEntryId || entryId, category, startTime, endTime, isMultiDay);
+                return;
+            }
+            
+            // For regular entries or if we couldn't find a continuation entry
+            sendEntryUpdate(entryId, category, startTime, endTime, isMultiDay);
+        }
+        
+        // Send the entry update to the server
+        function sendEntryUpdate(entryId, category, startTime, endTime, isMultiDay) {
             fetch('/entry/update', {
                 method: 'POST',
                 headers: {
@@ -1027,6 +1413,29 @@
             const seconds = String(d.getSeconds()).padStart(2, '0');
             
             return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+        }
+        
+        // Helper function to get category with emoji
+        function getCategoryWithEmoji(category) {
+            const categoryMap = {
+                'work': '💼 Work',
+                'personal': '🏠 Personal',
+                'meeting': '👥 Meeting',
+                'break': '☕ Break',
+                'admin': '📋 Admin',
+                'development': '💻 Dev',
+                'design': '🎨 Design',
+                'research': '🔍 Research',
+                'planning': '📅 Planning',
+                'learning': '📚 Learning',
+                'exercise': '🏋️ Exercise',
+                'reading': '📖 Reading',
+                'writing': '✍️ Writing',
+                'travel': '✈️ Travel',
+                'other': '❓ Other'
+            };
+            
+            return categoryMap[category] || categoryMap['other'];
         }
         
         // Show entry details in modal
@@ -1226,9 +1635,9 @@
             const lastMinute = parseInt(lastSlot.dataset.minute);
             const date = firstSlot.dataset.date;
             
-            // Add 15 minutes to the last slot to get end time
+            // Add 30 minutes to the last slot to get end time
             let endHour = lastHour;
-            let endMinute = lastMinute + 15;
+            let endMinute = lastMinute + 30;
             if (endMinute >= 60) {
                 endHour++;
                 endMinute = 0;

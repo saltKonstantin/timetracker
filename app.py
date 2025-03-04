@@ -3,6 +3,7 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from config import Config
 from models import db, User
+import argparse
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -35,5 +36,11 @@ def create_app(config_class=Config):
     return app
 
 if __name__ == '__main__':
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Run the Flask application')
+    parser.add_argument('--port', type=int, default=5000, help='Port to run the application on')
+    parser.add_argument('--host', type=str, default='127.0.0.1', help='Host to run the application on')
+    args = parser.parse_args()
+    
     app = create_app()
-    app.run(debug=True)
+    app.run(debug=True, host=args.host, port=args.port)
