@@ -357,9 +357,12 @@
                 entryEl.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
                 entryEl.style.backgroundColor = getRandomColor(entry.description);
                 entryEl.dataset.entryId = entry.id;
-                entryEl.dataset.startTime = entry.start_time.toISOString();
-                entryEl.dataset.endTime = entry.end_time.toISOString();
+                
+                // Store ISO strings without timezone info for consistent handling
+                entryEl.dataset.startTime = toLocalISOString(entry.start_time);
+                entryEl.dataset.endTime = toLocalISOString(entry.end_time);
                 entryEl.dataset.date = entry.date;
+                
                 entryEl.innerHTML = `
                     <div class="entry-title">${entry.description}</div>
                     <div class="entry-time">${formatTime(entry.start_time)} - ${formatTime(entry.end_time)}</div>
@@ -430,9 +433,10 @@
                     
                     draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
                     
-                    // Update the data attributes
-                    draggedEntry.dataset.startTime = newStartTime.toISOString();
-                    draggedEntry.dataset.endTime = newEndTime.toISOString();
+                    // Update the data attributes with ISO strings without timezone info
+                    // This ensures consistent timezone handling between client and server
+                    draggedEntry.dataset.startTime = toLocalISOString(newStartTime);
+                    draggedEntry.dataset.endTime = toLocalISOString(newEndTime);
                     
                     // Update displayed time
                     const timeDisplay = draggedEntry.querySelector('.entry-time');
@@ -468,8 +472,8 @@
                         
                         draggedEntry.style.gridRow = `${startPosition + 1} / span ${entryLength}`;
                         
-                        // Update the data attributes
-                        draggedEntry.dataset.endTime = newEndTime.toISOString();
+                        // Update the data attributes with ISO strings without timezone info
+                        draggedEntry.dataset.endTime = toLocalISOString(newEndTime);
                         
                         // Update displayed time
                         const timeDisplay = draggedEntry.querySelector('.entry-time');
@@ -584,6 +588,22 @@
         // Format date as YYYY-MM-DD
         function formatDate(date) {
             return date.toISOString().split('T')[0];
+        }
+        
+        // Convert a Date object to ISO string without timezone info
+        function toLocalISOString(date) {
+            // Create a new date object to avoid modifying the original
+            const d = new Date(date);
+            
+            // Format as YYYY-MM-DDTHH:MM:SS
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const seconds = String(d.getSeconds()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
         }
         
         // Show entry details in modal

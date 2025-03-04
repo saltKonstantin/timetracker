@@ -116,8 +116,22 @@ def update_entry_ajax():
         return jsonify({'success': False, 'message': 'You cannot edit this entry.'}), 403
     
     try:
-        entry.start_time = datetime.fromisoformat(new_start)
-        entry.end_time = datetime.fromisoformat(new_end)
+        # Fix timezone issues by properly parsing ISO format
+        # Remove the 'Z' suffix if present (which indicates UTC)
+        if new_start.endswith('Z'):
+            new_start = new_start[:-1]
+        if new_end.endswith('Z'):
+            new_end = new_end[:-1]
+            
+        # Parse the ISO strings to datetime objects
+        # If the string doesn't have timezone info, it will be interpreted as local time
+        start_time = datetime.fromisoformat(new_start)
+        end_time = datetime.fromisoformat(new_end)
+        
+        # Store the updated times
+        entry.start_time = start_time
+        entry.end_time = end_time
+        
         db.session.commit()
         return jsonify({'success': True})
     except Exception as e:
