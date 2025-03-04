@@ -81,9 +81,13 @@ def timeline():
 def create_entry():
     form = TimeEntryForm()
     if form.validate_on_submit():
+        # Get category from form data if it exists
+        category = request.form.get('category', None)
+        
         entry = TimeEntry(
             user_id=current_user.id,
             description=form.description.data,
+            category=category,
             start_time=form.start_time.data,
             end_time=form.end_time.data
         )
@@ -109,6 +113,7 @@ def update_entry_ajax():
     new_start = data.get('start_time')
     new_end = data.get('end_time')
     new_description = data.get('description')
+    new_category = data.get('category')
     
     entry = TimeEntry.query.get_or_404(entry_id)
     
@@ -136,6 +141,10 @@ def update_entry_ajax():
         # Update description if provided
         if new_description is not None:
             entry.description = new_description
+            
+        # Update category if provided
+        if new_category is not None:
+            entry.category = new_category
         
         db.session.commit()
         return jsonify({'success': True})
@@ -153,6 +162,9 @@ def quick_entry():
             duration_hours = float(form.duration.data)
             duration_minutes = int(duration_hours * 60)
             
+            # Get category from form data if it exists
+            category = request.form.get('category', None)
+            
             # Create entry starting now
             start_time = datetime.now()
             end_time = start_time + timedelta(minutes=duration_minutes)
@@ -160,6 +172,7 @@ def quick_entry():
             entry = TimeEntry(
                 user_id=current_user.id,
                 description=form.description.data,
+                category=category,
                 start_time=start_time,
                 end_time=end_time
             )
@@ -289,3 +302,40 @@ def analytics():
         start_date=start_date,
         end_date=end_date
     )
+
+@entries_bp.route('/entry/create/ajax', methods=['POST'])
+@login_required
+def create_entry_ajax():
+    data = request.json
+    
+    try:
+        # Parse the start and end times
+        start_time = datetime.fromisoformat(data.get('start_time'))
+        end_time = datetime.fromisoformat(data.get('end_time'))
+        description = data.get('description', '')
+        category = data.get('category', None)
+        
+        # Create the new entry
+        entry = TimeEntry(
+            user_id=current_user.id,
+            description=description,
+            category=category,
+            start_time=start_time,
+            end_time=end_time
+        )
+        
+        db.session.add(entry)
+        db.session.commit()
+        
+        # Return the new entry data
+        return jsonify({
+            'id': entry.id,
+            'description': entry.description,
+            'category': entry.category,
+            'start_time': entry.start_time.isoformat(),
+            'end_time': entry.end_time.isoformat(),
+            'duration': (entry.end_time - entry.start_time).total_seconds() / 60
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400

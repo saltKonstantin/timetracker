@@ -37,6 +37,61 @@
         color: rgba(0, 0, 0, 0.5);
     }
     
+    /* Category styles */
+    .entry-category {
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+        color: #333;
+    }
+    
+    /* Category colors */
+    .time-entry[data-category="work"] {
+        background-color: rgba(52, 152, 219, 0.8) !important;
+    }
+    
+    .time-entry[data-category="personal"] {
+        background-color: rgba(155, 89, 182, 0.8) !important;
+    }
+    
+    .time-entry[data-category="meeting"] {
+        background-color: rgba(231, 76, 60, 0.8) !important;
+    }
+    
+    .time-entry[data-category="break"] {
+        background-color: rgba(46, 204, 113, 0.8) !important;
+    }
+    
+    .time-entry[data-category="admin"] {
+        background-color: rgba(241, 196, 15, 0.8) !important;
+    }
+    
+    .time-entry[data-category="development"] {
+        background-color: rgba(52, 73, 94, 0.8) !important;
+        color: white;
+    }
+    
+    .time-entry[data-category="design"] {
+        background-color: rgba(230, 126, 34, 0.8) !important;
+    }
+    
+    .time-entry[data-category="research"] {
+        background-color: rgba(26, 188, 156, 0.8) !important;
+    }
+    
+    .time-entry[data-category="planning"] {
+        background-color: rgba(149, 165, 166, 0.8) !important;
+    }
+    
+    .time-entry[data-category="learning"] {
+        background-color: rgba(211, 84, 0, 0.8) !important;
+    }
+    
+    .time-entry[data-category="other"] {
+        background-color: rgba(189, 195, 199, 0.8) !important;
+    }
+    
     /* Entry popup styles */
     .entry-popup .modal-content {
         border-radius: 8px;
@@ -161,19 +216,25 @@
                 <div id="entryEditMode" style="display: none;">
                     <form id="editEntryForm" method="post">
                         <div class="mb-3">
-                            <label for="editEntryDescription" class="form-label">Description</label>
-                            <input type="text" class="form-control" id="editEntryDescription" name="description" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editEntryCategory" class="form-label">Category (Coming Soon)</label>
-                            <select class="form-control" id="editEntryCategory" name="category" disabled>
+                            <label for="editEntryCategory" class="form-label">Category</label>
+                            <select class="form-control" id="editEntryCategory" name="category" required>
                                 <option value="">Select a category</option>
                                 <option value="work">Work</option>
                                 <option value="personal">Personal</option>
                                 <option value="meeting">Meeting</option>
                                 <option value="break">Break</option>
+                                <option value="admin">Administrative</option>
+                                <option value="development">Development</option>
+                                <option value="design">Design</option>
+                                <option value="research">Research</option>
+                                <option value="planning">Planning</option>
+                                <option value="learning">Learning</option>
+                                <option value="other">Other</option>
                             </select>
-                            <small class="form-text text-muted">Category support will be added in a future update.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editEntryDescription" class="form-label">Notes (Optional)</label>
+                            <input type="text" class="form-control" id="editEntryDescription" name="description" placeholder="Additional details (optional)">
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -256,8 +317,25 @@
                         <form method="post" action="{{ url_for('entries.create_entry') }}">
                             {{ entry_form.hidden_tag() }}
                             <div class="mb-3">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-control" id="category" name="category" required>
+                                    <option value="">Select a category</option>
+                                    <option value="work">Work</option>
+                                    <option value="personal">Personal</option>
+                                    <option value="meeting">Meeting</option>
+                                    <option value="break">Break</option>
+                                    <option value="admin">Administrative</option>
+                                    <option value="development">Development</option>
+                                    <option value="design">Design</option>
+                                    <option value="research">Research</option>
+                                    <option value="planning">Planning</option>
+                                    <option value="learning">Learning</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
                                 {{ entry_form.description.label(class="form-label") }}
-                                {{ entry_form.description(class="form-control") }}
+                                {{ entry_form.description(class="form-control", placeholder="Additional details (optional)") }}
                                 {% for error in entry_form.description.errors %}
                                     <span class="text-danger">{{ error }}</span>
                                 {% endfor %}
@@ -287,8 +365,25 @@
                         <form method="post" action="{{ url_for('entries.quick_entry') }}">
                             {{ quick_form.hidden_tag() }}
                             <div class="mb-3">
+                                <label for="quick_category" class="form-label">Category</label>
+                                <select class="form-control" id="quick_category" name="category" required>
+                                    <option value="">Select a category</option>
+                                    <option value="work">Work</option>
+                                    <option value="personal">Personal</option>
+                                    <option value="meeting">Meeting</option>
+                                    <option value="break">Break</option>
+                                    <option value="admin">Administrative</option>
+                                    <option value="development">Development</option>
+                                    <option value="design">Design</option>
+                                    <option value="research">Research</option>
+                                    <option value="planning">Planning</option>
+                                    <option value="learning">Learning</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
                                 {{ quick_form.description.label(class="form-label") }}
-                                {{ quick_form.description(class="form-control") }}
+                                {{ quick_form.description(class="form-control", placeholder="Additional details (optional)") }}
                                 {% for error in quick_form.description.errors %}
                                     <span class="text-danger">{{ error }}</span>
                                 {% endfor %}
@@ -324,8 +419,25 @@
                 <form id="newEntryFromSelectionForm" method="post" action="{{ url_for('entries.create_entry') }}">
                     {{ entry_form.hidden_tag() }}
                     <div class="mb-3">
+                        <label for="selectionCategory" class="form-label">Category</label>
+                        <select class="form-control" id="selectionCategory" name="category" required>
+                            <option value="">Select a category</option>
+                            <option value="work">Work</option>
+                            <option value="personal">Personal</option>
+                            <option value="meeting">Meeting</option>
+                            <option value="break">Break</option>
+                            <option value="admin">Administrative</option>
+                            <option value="development">Development</option>
+                            <option value="design">Design</option>
+                            <option value="research">Research</option>
+                            <option value="planning">Planning</option>
+                            <option value="learning">Learning</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         {{ entry_form.description.label(class="form-label") }}
-                        {{ entry_form.description(class="form-control") }}
+                        {{ entry_form.description(class="form-control", placeholder="Additional details (optional)") }}
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -357,6 +469,7 @@
         allEntries.push({
             id: {{ entry.id }},
             description: "{{ entry.description }}",
+            category: "{{ entry.category if entry.category else 'other' }}",
             start_time: new Date("{{ entry.start_time.isoformat() }}"),
             end_time: new Date("{{ entry.end_time.isoformat() }}"),
             date: "{{ entry.start_time.strftime('%Y-%m-%d') }}",
@@ -439,10 +552,9 @@
         document.addEventListener('mouseup', (e) => {
             if (isSelecting) {
                 isSelecting = false;
-                // Comment out the following lines to prevent the pop-up
-                // if (selectedSlots.length > 0) {
-                //     showNewEntryFromSelection();
-                // }
+                if (selectedSlots.length > 0) {
+                    showNewEntryFromSelection();
+                }
             }
             
             if (isDragging || isResizing) {
@@ -530,6 +642,7 @@
                 
                 entryEl.style.backgroundColor = getRandomColor(entry.description);
                 entryEl.dataset.entryId = entry.id;
+                entryEl.dataset.category = entry.category || 'other';
                 
                 // Store ISO strings without timezone info for consistent handling
                 entryEl.dataset.startTime = toLocalISOString(entry.start_time);
@@ -540,6 +653,7 @@
                 // Make the entry clickable by adding a link
                 entryEl.innerHTML = `
                     <div class="entry-resize-handle top-handle"></div>
+                    <div class="entry-category">${entry.category || 'other'}</div>
                     <div class="entry-title">${entry.description}</div>
                     <div class="entry-time">${formatTime(entry.start_time)} - ${formatTime(entry.end_time)}</div>
                     <div class="entry-resize-handle bottom-handle"></div>
@@ -796,6 +910,7 @@
             const startTime = entryEl.dataset.startTime;
             const endTime = entryEl.dataset.endTime;
             const isMultiDay = entryEl.dataset.isMultiDay === "true";
+            const category = entryEl.dataset.category || 'other';
             
             // Remove the dragging class
             entryEl.classList.remove('dragging');
@@ -809,6 +924,7 @@
                 },
                 body: JSON.stringify({
                     id: entryId,
+                    category: category,
                     start_time: startTime,
                     end_time: endTime
                 })
@@ -874,6 +990,10 @@
         
         // Get a deterministic color based on string
         function getRandomColor(str) {
+            // If we're using category colors, return a transparent color
+            return 'rgba(0, 0, 0, 0.0)';
+            
+            // This code is kept for backward compatibility but not used
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
                 hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -935,6 +1055,7 @@
                 `${hours > 0 ? hours + ' hour' + (hours > 1 ? 's' : '') : ''} ${minutes > 0 ? minutes + ' minute' + (minutes > 1 ? 's' : '') : ''}`.trim();
             
             // Populate edit mode fields
+            document.getElementById('editEntryCategory').value = entry.category;
             document.getElementById('editEntryDescription').value = entry.description;
             
             // Format for datetime-local input
@@ -985,13 +1106,17 @@
             const setupSaveButton = (btn) => {
                 btn.onclick = () => {
                     // Get values from form
+                    const category = document.getElementById('editEntryCategory').value;
                     const description = document.getElementById('editEntryDescription').value;
                     const startTime = document.getElementById('editEntryStartTime').value;
                     const endTime = document.getElementById('editEntryEndTime').value;
                     
-                    // Convert to ISO strings
-                    const startTimeISO = new Date(startTime).toISOString();
-                    const endTimeISO = new Date(endTime).toISOString();
+                    // Convert to ISO strings while preserving local time
+                    // This prevents the timezone shift when saving without changes
+                    const startDate = new Date(startTime);
+                    const endDate = new Date(endTime);
+                    const startTimeISO = toLocalISOString(startDate);
+                    const endTimeISO = toLocalISOString(endDate);
                     
                     // Send update to server
                     fetch('/entry/update', {
@@ -1002,6 +1127,7 @@
                         },
                         body: JSON.stringify({
                             id: entry.id,
+                            category: category,
                             description: description,
                             start_time: startTimeISO,
                             end_time: endTimeISO
@@ -1126,11 +1252,17 @@
             document.getElementById('selectionStartTime').value = formatForInput(startDateTime);
             document.getElementById('selectionEndTime').value = formatForInput(endDateTime);
             
-            // Clear the description field
+            // Clear the description field and set focus to category
             const descriptionField = document.querySelector('#newEntryFromSelectionForm input[name="description"]');
             if (descriptionField) {
                 descriptionField.value = '';
-                descriptionField.focus();
+            }
+            
+            // Set focus to the category dropdown
+            const categoryField = document.getElementById('selectionCategory');
+            if (categoryField) {
+                categoryField.value = '';
+                setTimeout(() => categoryField.focus(), 100);
             }
             
             // Show the modal
